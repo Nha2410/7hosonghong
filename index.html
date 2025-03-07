@@ -1,0 +1,3212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Tính toán Điều tiết Hồ chứa Sông Hồng</title>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=w24gbWhQX3SdiDN4tZIShY4mNCf8SzOgY0-Y6yPmQ8pOuDlTu8uq7UZmwh_oIVLrFaeWzI5sD9dKk-4dwpOy7Dz0MbuCYKCqFilv0omZ6lvWfxHxahfhJLattZO4BDZnWsLLTXe1funzsrK-I3gr1EmWzbUJTO8ZtjFVZgMECI_0UbhZC3bIIdNxErbkrycte16tFjgOeQE_Tj0ZttLhb1GZfO2E425497Ib9CjG6HDKc1XnJMYuohiMkJGiZ2BQ425s5bBSwLDZ69cD6MJ4OmOvDLPDildt2Y8knGDfiCONrMym5Vv4xowqqNQv0kIXjKXAyrp8B1xbeBpI1_oovdRLu7rr6lqkFLapnk2VF7TW54BFoYTeiK_2v-M-q60t8Sc4jBpSJ55YjcgINP-vvoaxX27z9cu7VgqSHGmmfC0Z2bX5tBH7plk3foB4DcPMYvMYmVFmEoCWH27-GQf33P59f5n74ZVIn9hENA9JZSI" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://me.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9tYWlsLm1vbnJlLmdvdi52bi9vd2Evc2VydmljZS5zdmMvcy9HZXRGaWxlQXR0YWNobWVudD9pZD1BQU1rQUdZME5qUmpaVGhpTFRobU5UVXROREkzWkMxaVpHUTFMV1pqWXpRMU1tSm1aamt3TkFCR0FBQUFBQUQ5Rk1mRlliV3FUNzMydmtJQ3NmTzZCd0R4MU9BUldQUjhRSlpYbUxwUkZTdnRBQUFBR0RVT0FBQnFBOTJ0WTB5clJhV3Q3bVRnJTJmR3lxQUFQcjMycXRBQUFCRWdBUUFHOXE0U1FNVlNGQnFVRU1NT2FyNlZnJTNkJlgtT1dBLUNBTkFSWT1teHlQTWZzb1FVS3o1SFdfUFJGVFpZRC1JYUpDWGQwSU50Vk41dVRqX2h0LXpvMllwOU9TV05GTWhQa1FZS0JQbU5YTGY0b0Jsb2Mu"/><script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Đảm bảo hiển thị kết quả đúng */
+        #results:not(.hidden), #routing-results:not(.hidden), #system-results:not(.hidden) {
+            display: block;
+        }
+        
+        /* Thêm hiệu ứng nút */
+        #calculate-btn, #routing-btn, #system-btn {
+            transition: all 0.3s ease;
+        }
+        
+        #calculate-btn:hover, #routing-btn:hover, #system-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        #calculate-btn:active, #routing-btn:active, #system-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Tùy chỉnh cho tab */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-button {
+            position: relative;
+        }
+        
+        .tab-button.active {
+            color: #5D5CDE;
+            border-bottom: 2px solid #5D5CDE;
+        }
+        
+        /* Tô màu đường sông theo các nhánh */
+        .song-da {
+            stroke: #3B82F6;
+        }
+        
+        .song-chay {
+            stroke: #10B981;
+        }
+        
+        .song-gam {
+            stroke: #F59E0B;
+        }
+        
+        .song-nam-mu {
+            stroke: #EC4899;
+        }
+        
+        .song-hong {
+            stroke: #EF4444;
+        }
+        
+        /* Hiệu ứng cho hồ chứa trên bản đồ */
+        .reservoir-marker {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .reservoir-marker:hover rect {
+            fill: #4F46E5;
+        }
+        
+        /* Hiệu ứng cho đường diễn toán */
+        .highlighted-route {
+            stroke-width: 7;
+            filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+        }
+        
+        /* Kiểu animation cho dòng chảy */
+        .flow-animation {
+            stroke-dasharray: 10;
+            animation: flowAnimation 1s linear infinite;
+        }
+        
+        @keyframes flowAnimation {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+        
+        /* Kiểu dáng cho bảng hệ thống */
+        .system-table th, .system-table td {
+            padding: 0.5rem;
+            text-align: center;
+        }
+        
+        .system-table input {
+            width: 100%;
+            padding: 0.25rem;
+            text-align: center;
+            background-color: transparent;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.25rem;
+        }
+        
+        .system-table input:focus {
+            outline: none;
+            border-color: #5D5CDE;
+            box-shadow: 0 0 0 1px #5D5CDE;
+        }
+        
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div class="container mx-auto px-4 py-8 max-w-screen-xl">
+        <h1 class="text-3xl font-bold text-center mb-8">Ứng dụng Tính toán Điều tiết Hồ chứa Sông Hồng</h1>
+        
+        <!-- Tabs Navigation -->
+        <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
+            <button id="regulation-tab" class="tab-button py-2 px-4 active whitespace-nowrap">Điều tiết hồ đơn lẻ</button>
+            <button id="routing-tab" class="tab-button py-2 px-4 whitespace-nowrap">Diễn toán dòng chảy</button>
+            <button id="system-tab" class="tab-button py-2 px-4 whitespace-nowrap">Mô phỏng toàn hệ thống</button>
+        </div>
+        
+        <!-- Regulation Tab Content -->
+        <div id="regulation-content" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column - Reservoir Selection and Info -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-bold mb-4">Thông tin Hồ chứa</h2>
+                        
+                        <div class="mb-4">
+                            <label for="reservoir-select" class="block mb-2 text-sm font-medium">Chọn Hồ chứa</label>
+                            <select id="reservoir-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                                <option value="" selected disabled>Chọn một hồ chứa</option>
+                                <option value="tuyen-quang">Tuyên Quang</option>
+                                <option value="thac-ba">Thác Bà</option>
+                                <option value="hoa-binh">Hòa Bình</option>
+                                <option value="son-la">Sơn La</option>
+                                <option value="lai-chau">Lai Châu</option>
+                                <option value="ban-chat">Bản Chát</option>
+                                <option value="huoi-quang">Huội Quảng</option>
+                            </select>
+                        </div>
+
+                        <div id="reservoir-info" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 hidden">
+                            <h3 id="reservoir-name" class="text-lg font-semibold mb-2"></h3>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>Dung tích:</div><div id="reservoir-capacity" class="font-semibold"></div>
+                                <div>Mực nước dâng bình thường:</div><div id="reservoir-normal-level" class="font-semibold"></div>
+                                <div>Mực nước chết:</div><div id="reservoir-min-level" class="font-semibold"></div>
+                                <div>Dung tích hữu ích:</div><div id="reservoir-useful-capacity" class="font-semibold"></div>
+                                <div>Lưu lượng xả tối đa:</div><div id="reservoir-max-discharge" class="font-semibold"></div>
+                                <div>Lưu lượng xả tối thiểu:</div><div id="reservoir-min-discharge" class="font-semibold"></div>
+                                <div>Công suất:</div><div id="reservoir-power" class="font-semibold"></div>
+                                <div>Năm vận hành:</div><div id="reservoir-operation" class="font-semibold"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-2">Thông số Điều tiết</h3>
+                            <div class="mb-4">
+                                <label for="initial-level" class="block mb-1 text-sm font-medium">Mực nước ban đầu (m)</label>
+                                <input type="number" id="initial-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Mực nước ban đầu">
+                            </div>
+                            <div class="mb-4">
+                                <label for="inflow" class="block mb-1 text-sm font-medium">Lưu lượng đến (m³/s)</label>
+                                <input type="number" id="inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Lưu lượng đến">
+                            </div>
+                            <div class="mb-4">
+                                <label for="regulation-time" class="block mb-1 text-sm font-medium">Thời gian điều tiết (giờ)</label>
+                                <input type="number" id="regulation-time" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Số giờ" value="24">
+                            </div>
+                            <div class="mb-4">
+                                <label for="target-level" class="block mb-1 text-sm font-medium">Mực nước mục tiêu (m)</label>
+                                <input type="number" id="target-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Mực nước mục tiêu (tùy chọn)">
+                            </div>
+                            <div class="mb-4">
+                                <label for="target-outflow" class="block mb-1 text-sm font-medium">Lưu lượng xả mục tiêu (m³/s)</label>
+                                <input type="number" id="target-outflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Lưu lượng xả mục tiêu (tùy chọn)">
+                            </div>
+                            <button id="calculate-btn" class="w-full text-white bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Tính toán Điều tiết</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Results and Visualization -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+                        <h2 class="text-xl font-bold mb-4">Kết quả Tính toán</h2>
+                        <div id="results" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h3 class="font-semibold mb-2">Tóm tắt Điều tiết</h3>
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <div>Dung tích ban đầu:</div><div id="initial-volume" class="font-semibold"></div>
+                                        <div>Dung tích cuối:</div><div id="final-volume" class="font-semibold"></div>
+                                        <div>Thay đổi dung tích:</div><div id="volume-change" class="font-semibold"></div>
+                                        <div>Lưu lượng xả yêu cầu:</div><div id="required-outflow" class="font-semibold"></div>
+                                        <div>Mực nước cuối:</div><div id="final-level" class="font-semibold"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h3 class="font-semibold mb-2">Trạng thái Vận hành</h3>
+                                    <div id="status-message" class="text-sm"></div>
+                                    <div id="recommendations" class="mt-3 text-sm"></div>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <h3 class="font-semibold mb-2">Biểu đồ Điều tiết</h3>
+                                <div id="regulation-chart" class="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg p-2">
+                                    <canvas id="lineChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="no-results" class="text-center py-10">
+                            <p class="text-gray-500 dark:text-gray-400">Chọn hồ chứa và nhập thông số để xem kết quả điều tiết</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-bold mb-4">Sơ đồ Hệ thống Sông Hồng</h2>
+                        <div id="river-system" class="relative h-96 bg-blue-50 dark:bg-blue-900/20 rounded-lg overflow-hidden">
+                            <!-- SVG visualization will be inserted here -->
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                            <p class="mb-2">Chú thích:</p>
+                            <div class="flex flex-wrap gap-4">
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-blue-600 mr-2"></span>
+                                    <span>Hồ chứa</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-red-500 mr-2"></span>
+                                    <span>Sông Hồng</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-blue-500 mr-2"></span>
+                                    <span>Sông Đà</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-green-500 mr-2"></span>
+                                    <span>Sông Chảy</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-yellow-500 mr-2"></span>
+                                    <span>Sông Gâm</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-pink-500 mr-2"></span>
+                                    <span>Sông Nậm Mu</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="inline-block w-4 h-4 bg-green-600 mr-2"></span>
+                                    <span>Trạm đo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Routing Tab Content -->
+        <div id="routing-content" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column - Routing Input -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-bold mb-4">Thông số Diễn toán Muskingum</h2>
+                        
+                        <div class="mb-4">
+                            <label for="routing-path" class="block mb-2 text-sm font-medium">Chọn đường diễn toán</label>
+                            <select id="routing-path" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                                <option value="" selected disabled>Chọn đường diễn toán</option>
+                                <option value="lai-chau-son-la">Lai Châu → Sơn La</option>
+                                <option value="ban-chat-huoi-quang">Bản Chát → Huội Quảng</option>
+                                <option value="huoi-quang-son-la">Huội Quảng → Sơn La</option>
+                                <option value="son-la-hoa-binh">Sơn La → Hòa Bình</option>
+                                <option value="thac-ba-viet-tri">Thác Bà → Việt Trì</option>
+                                <option value="tuyen-quang-viet-tri">Tuyên Quang → Việt Trì</option>
+                                <option value="hoa-binh-viet-tri">Hòa Bình → Việt Trì</option>
+                            </select>
+                        </div>
+                        
+                        <div id="routing-info" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 hidden">
+                            <h3 id="routing-name" class="text-lg font-semibold mb-2"></h3>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>Chiều dài:</div><div id="routing-length" class="font-semibold"></div>
+                                <div>Hệ số K mặc định:</div><div id="routing-k" class="font-semibold"></div>
+                                <div>Hệ số X mặc định:</div><div id="routing-x" class="font-semibold"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-2">Thông số Tính toán</h3>
+                            <div class="mb-4">
+                                <label for="routing-k" class="block mb-1 text-sm font-medium">Hệ số K (giờ)</label>
+                                <input type="number" id="routing-k-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Hệ số K">
+                            </div>
+                            <div class="mb-4">
+                                <label for="routing-x" class="block mb-1 text-sm font-medium">Hệ số X (0-0.5)</label>
+                                <input type="number" id="routing-x-input" min="0" max="0.5" step="0.01" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Hệ số X">
+                            </div>
+                            <div class="mb-4">
+                                <label for="time-step" class="block mb-1 text-sm font-medium">Bước thời gian Δt (giờ)</label>
+                                <input type="number" id="time-step" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Bước thời gian" value="1">
+                            </div>
+                            <div class="mb-4">
+                                <label for="num-steps" class="block mb-1 text-sm font-medium">Số bước thời gian</label>
+                                <input type="number" id="num-steps" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Số bước thời gian" value="24">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block mb-1 text-sm font-medium">Dữ liệu lưu lượng đầu vào</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <select id="inflow-pattern" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                            <option value="custom">Tùy chỉnh</option>
+                                            <option value="triangular">Hình tam giác</option>
+                                            <option value="trapezoidal">Hình thang</option>
+                                            <option value="sinusoidal">Hình sin</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <button id="generate-pattern" class="text-white bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">Tạo mẫu</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-medium">Bảng dữ liệu lưu lượng đến</label>
+                                    <button id="expand-table" class="text-xs text-primary hover:underline">Mở rộng bảng</button>
+                                </div>
+                                <div id="inflow-table-container" class="max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                                    <table id="inflow-table" class="w-full text-sm text-left text-gray-900 dark:text-white">
+                                        <thead class="sticky top-0 text-xs uppercase bg-gray-100 dark:bg-gray-600">
+                                            <tr>
+                                                <th scope="col" class="px-3 py-2">Thời gian (giờ)</th>
+                                                <th scope="col" class="px-3 py-2">Lưu lượng (m³/s)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Bảng sẽ được điền động bằng JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <button id="routing-btn" class="w-full text-white bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Tính toán Diễn toán</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Routing Results -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+                        <h2 class="text-xl font-bold mb-4">Kết quả Diễn toán</h2>
+                        <div id="routing-results" class="hidden">
+                            <div class="grid grid-cols-1 gap-4 mb-4">
+                                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h3 class="font-semibold mb-2">Thông số Diễn toán Muskingum</h3>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                        <div>Hệ số C₀:</div><div id="coef-c0" class="font-semibold"></div>
+                                        <div>Hệ số C₁:</div><div id="coef-c1" class="font-semibold"></div>
+                                        <div>Hệ số C₂:</div><div id="coef-c2" class="font-semibold"></div>
+                                        <div>Tổng C:</div><div id="coef-sum" class="font-semibold"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <h3 class="font-semibold mb-2">Biểu đồ Diễn toán</h3>
+                                <div id="routing-chart" class="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg p-2">
+                                    <canvas id="routingChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="font-semibold">Bảng Kết quả Diễn toán</h3>
+                                    <button id="download-results" class="text-xs text-primary hover:underline">Tải xuống CSV</button>
+                                </div>
+                                <div class="max-h-80 overflow-y-auto bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    <table class="w-full text-sm text-left text-gray-900 dark:text-white">
+                                        <thead class="sticky top-0 text-xs uppercase bg-gray-200 dark:bg-gray-600">
+                                            <tr>
+                                                <th scope="col" class="px-3 py-2">Thời gian (giờ)</th>
+                                                <th scope="col" class="px-3 py-2">Lưu lượng đến (m³/s)</th>
+                                                <th scope="col" class="px-3 py-2">Lưu lượng ra (m³/s)</th>
+                                                <th scope="col" class="px-3 py-2">Lưu lượng trung bình (m³/s)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="routing-results-table">
+                                            <!-- Bảng sẽ được điền động bằng JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="no-routing-results" class="text-center py-10">
+                            <p class="text-gray-500 dark:text-gray-400">Chọn đường diễn toán và nhập thông số để xem kết quả diễn toán</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-bold mb-4">Thông tin Phương pháp Muskingum</h2>
+                        <div class="text-sm text-gray-700 dark:text-gray-300 space-y-3">
+                            <p>Phương pháp Muskingum là một phương pháp diễn toán dòng chảy thông dụng dựa trên phương trình cân bằng lưu lượng và quan hệ lưu trữ-lưu lượng.</p>
+                            <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                <h3 class="font-medium mb-2">Công thức cơ bản:</h3>
+                                <p>Q<sub>ra(i+1)</sub> = C<sub>0</sub>Q<sub>đến(i+1)</sub> + C<sub>1</sub>Q<sub>đến(i)</sub> + C<sub>2</sub>Q<sub>ra(i)</sub></p>
+                                <p class="mt-2">Trong đó các hệ số C tính bằng:</p>
+                                <p>C<sub>0</sub> = (Δt - 2KX) / (2K(1-X) + Δt)</p>
+                                <p>C<sub>1</sub> = (Δt + 2KX) / (2K(1-X) + Δt)</p>
+                                <p>C<sub>2</sub> = (2K(1-X) - Δt) / (2K(1-X) + Δt)</p>
+                            </div>
+                            <p>Trong đó K là thông số thời gian di chuyển của lũ và X là tham số trọng số (0-0.5) phản ánh ảnh hưởng tương đối giữa lưu lượng vào và ra lên lưu trữ.</p>
+                            <p>Để phương pháp ổn định, cần đảm bảo: K > Δt/2(1-X) và tổng C<sub>0</sub> + C<sub>1</sub> + C<sub>2</sub> = 1.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Tab Content -->
+        <div id="system-content" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column - System Input -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-bold mb-4">Thông số Mô phỏng Hệ thống</h2>
+                        
+                        <div class="mb-4">
+                            <label for="system-time" class="block mb-1 text-sm font-medium">Thời gian mô phỏng (giờ)</label>
+                            <input type="number" id="system-time" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" value="72">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="system-step" class="block mb-1 text-sm font-medium">Bước thời gian (giờ)</label>
+                            <input type="number" id="system-step" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" value="1">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium mb-3 border-b pb-2 dark:border-gray-700">Thông số từng hồ chứa</h3>
+                            
+                            <div class="space-y-4 max-h-[450px] overflow-y-auto pr-2">
+                                <!-- Lai Châu -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-blue-500 mr-2"></span>
+                                        Hồ Lai Châu
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="lc-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 295m<br>Mực nước chết (MNC): 265m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="lc-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="295">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="lc-inflow" class="text-xs">Lưu lượng đến (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="lc-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="1000">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="lc-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="lc-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="295">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Bản Chát -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-pink-500 mr-2"></span>
+                                        Hồ Bản Chát
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="bc-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 475m<br>Mực nước chết (MNC): 431m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="bc-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="475">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="bc-inflow" class="text-xs">Lưu lượng đến (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="bc-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="800">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="bc-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="bc-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="475">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Huội Quảng -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-pink-500 mr-2"></span>
+                                        Hồ Huội Quảng
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="hq-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 370m<br>Mực nước chết (MNC): 368m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="hq-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="370">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="hq-inflow" class="text-xs">Lưu lượng đến tự nhiên (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="hq-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="300">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="hq-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="hq-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="370">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sơn La -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-blue-500 mr-2"></span>
+                                        Hồ Sơn La
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="sl-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 215m<br>Mực nước chết (MNC): 175m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="sl-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="215">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="sl-inflow" class="text-xs">Lưu lượng đến tự nhiên (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="sl-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="400">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="sl-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="sl-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="215">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hòa Bình -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-blue-500 mr-2"></span>
+                                        Hồ Hòa Bình
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="hb-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 117m<br>Mực nước chết (MNC): 80m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="hb-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="117">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="hb-inflow" class="text-xs">Lưu lượng đến tự nhiên (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="hb-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="200">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="hb-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="hb-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="117">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Thác Bà -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-green-500 mr-2"></span>
+                                        Hồ Thác Bà
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="tb-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 58m<br>Mực nước chết (MNC): 46m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="tb-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="58">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="tb-inflow" class="text-xs">Lưu lượng đến (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="tb-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="500">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="tb-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="tb-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="58">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tuyên Quang -->
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h4 class="font-medium mb-2 flex items-center">
+                                        <span class="inline-block w-3 h-3 bg-yellow-500 mr-2"></span>
+                                        Hồ Tuyên Quang
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <label for="tq-level" class="text-xs">Mực nước ban đầu (m):</label>
+                                            <div class="tooltip">
+                                                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="tooltiptext">Mực nước dâng bình thường (MNDBT): 122.55m<br>Mực nước chết (MNC): 120m</span>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="tq-level" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="122.55">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <label for="tq-inflow" class="text-xs">Lưu lượng đến (m³/s):</label>
+                                        </div>
+                                        <input type="number" id="tq-inflow" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="600">
+                                        
+                                        <div class="col-span-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs">Mục tiêu điều tiết:</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                                <select id="tq-target-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                                                    <option value="level">Mực nước</option>
+                                                    <option value="outflow">Lưu lượng xả</option>
+                                                </select>
+                                                <input type="number" id="tq-target-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" value="122.55">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button id="system-btn" class="w-full text-white bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Mô phỏng Hệ thống</button>
+                    </div>
+                </div>
+
+                <!-- Right Column - System Results -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+                        <h2 class="text-xl font-bold mb-4">Kết quả Mô phỏng Hệ thống</h2>
+                        <div id="system-results" class="hidden">
+                            <div class="mb-4">
+                                <div class="text-center mb-2">
+                                    <label for="time-slider" class="font-medium text-sm">Thời điểm: <span id="current-time">0</span> giờ</label>
+                                    <input type="range" id="time-slider" min="0" max="72" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                                </div>
+                                
+                                <div class="flex items-center justify-center gap-3 mb-4">
+                                    <button id="play-pause" class="bg-primary hover:bg-primary/90 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path>
+                                        </svg>
+                                    </button>
+                                    <div class="text-sm">
+                                        <label for="animation-speed" class="mr-1">Tốc độ:</label>
+                                        <select id="animation-speed" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                            <option value="0.5">0.5x</option>
+                                            <option value="1" selected>1x</option>
+                                            <option value="2">2x</option>
+                                            <option value="5">5x</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h3 class="font-medium mb-3 text-center">Mực nước các hồ chứa</h3>
+                                    <div class="h-56">
+                                        <canvas id="levelChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                                    <h3 class="font-medium mb-3 text-center">Lưu lượng xả các hồ chứa</h3>
+                                    <div class="h-56">
+                                        <canvas id="outflowChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="font-medium">Kết quả chi tiết</h3>
+                                    <div class="flex gap-2">
+                                        <button id="view-table" class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600">Xem bảng</button>
+                                        <button id="export-csv" class="text-xs text-white bg-primary px-2 py-1 rounded hover:bg-primary/90">Xuất CSV</button>
+                                    </div>
+                                </div>
+                                <div id="system-map" class="h-96 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden relative">
+                                    <!-- Map visualization will be updated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        <div id="no-system-results" class="text-center py-10">
+                            <p class="text-gray-500 dark:text-gray-400">Nhập thông số cho các hồ chứa và bấm "Mô phỏng Hệ thống" để xem kết quả</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                        <h2 class="text-xl font-bold mb-4">Thông tin Mô phỏng Hệ thống</h2>
+                        <div class="text-sm text-gray-700 dark:text-gray-300 space-y-3">
+                            <p>Mô phỏng hệ thống tích hợp cả 7 hồ chứa trên lưu vực sông Hồng, sử dụng phương pháp tính toán từ thượng nguồn xuống.</p>
+                            <p>Quá trình mô phỏng:</p>
+                            <ol class="list-decimal pl-5 space-y-1">
+                                <li>Tính toán lưu lượng xả từ các hồ thượng nguồn (Lai Châu, Bản Chát)</li>
+                                <li>Diễn toán dòng chảy từ thượng nguồn đến các hồ trung lưu (Huội Quảng, Sơn La)</li>
+                                <li>Tiếp tục diễn toán đến các hồ hạ du (Hòa Bình, Thác Bà, Tuyên Quang)</li>
+                                <li>Tính toán dòng chảy tại các điểm hợp lưu đến trạm Việt Trì</li>
+                            </ol>
+                            <p>Lưu ý quan trọng:</p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Lưu lượng đến tự nhiên là lưu lượng từ lưu vực riêng đổ vào hồ, không bao gồm lưu lượng từ các hồ thượng nguồn.</li>
+                                <li>Mô phỏng tự động tính toán sự cộng dồn của lưu lượng từ thượng nguồn sau khi diễn toán.</li>
+                                <li>Các mục tiêu điều tiết được ưu tiên thỏa mãn trong khi vẫn đảm bảo các giới hạn an toàn cho hồ chứa.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal để hiển thị toàn bộ bảng lưu lượng đến -->
+        <div id="inflow-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-2xl w-full max-h-screen overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                    <h3 class="text-xl font-bold">Dữ liệu lưu lượng đến</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="bulk-edit" class="block mb-1 text-sm font-medium">Sửa hàng loạt</label>
+                            <textarea id="bulk-edit" rows="10" class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Nhập dữ liệu dạng Q1, Q2, Q3, ..."></textarea>
+                            <div class="flex justify-end mt-2">
+                                <button id="apply-bulk-edit" class="text-white bg-primary hover:bg-primary/90 text-sm px-3 py-1 rounded">Áp dụng</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium">Chỉnh sửa từng giá trị</label>
+                            <div class="max-h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                                <table class="w-full text-sm text-left text-gray-900 dark:text-white">
+                                    <thead class="sticky top-0 text-xs uppercase bg-gray-100 dark:bg-gray-600">
+                                        <tr>
+                                            <th scope="col" class="px-3 py-2">Thời gian (giờ)</th>
+                                            <th scope="col" class="px-3 py-2">Lưu lượng (m³/s)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modal-inflow-table">
+                                        <!-- Bảng sẽ được điền động bằng JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end border-t pt-3 dark:border-gray-700">
+                        <button id="save-inflow-data" class="text-white bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Lưu Thay đổi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal để hiển thị bảng kết quả mô phỏng hệ thống -->
+        <div id="system-table-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-5xl w-full max-h-screen overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                    <h3 class="text-xl font-bold">Kết quả chi tiết mô phỏng hệ thống</h3>
+                    <button id="close-system-table" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="max-h-[70vh] overflow-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">Thời gian (giờ)</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">Hồ</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">Mực nước (m)</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">Lưu lượng đến (m³/s)</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">Lưu lượng xả (m³/s)</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">Dung tích (triệu m³)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="system-results-table" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Bảng sẽ được điền động bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thêm thông báo nổi để hiển thị kết quả đã được tính -->
+        <div id="calculation-toast" class="fixed bottom-4 right-4 bg-green-100 dark:bg-green-800 border-l-4 border-green-500 text-green-700 dark:text-green-200 p-4 rounded shadow-lg transition-opacity duration-300 opacity-0 hidden">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <p>Tính toán hoàn tất. Kết quả đã được hiển thị.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        // Dữ liệu về các hồ chứa
+        const reservoirData = {
+            'tuyen-quang': {
+                name: 'Đập Tuyên Quang',
+                river: 'Sông Gâm',
+                normalLevel: 122.55, // Hbt - mét
+                minLevel: 120, // Hc - mét
+                totalCapacity: 2245, // Wtb - triệu m³
+                usefulCapacity: 1700, // Whi - triệu m³
+                maxDischarge: 6990, // m³/s
+                minDischarge: null, // m³/s
+                power: 342, // MW
+                operation: 2008, // Năm
+                levelVolumeFunction: function(level) {
+                    // Hàm đơn giản để ước tính dung tích dựa trên mực nước
+                    if (level < 120) return 0;
+                    if (level > 122.55) return 2245;
+                    return (level - 120) / (122.55 - 120) * 2245;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 120;
+                    if (volume >= 2245) return 122.55;
+                    return 120 + (volume / 2245) * (122.55 - 120);
+                }
+            },
+            'thac-ba': {
+                name: 'Đập Thác Bà',
+                river: 'Sông Chảy',
+                normalLevel: 58, // Hbt - mét
+                minLevel: 46, // Hc - mét
+                totalCapacity: 2940, // Wtb - triệu m³
+                usefulCapacity: 2160, // Whi - triệu m³
+                maxDischarge: 2000, // m³/s
+                minDischarge: null, // m³/s
+                power: 120, // MW
+                operation: 1971, // Năm
+                levelVolumeFunction: function(level) {
+                    if (level < 46) return 0;
+                    if (level > 58) return 2940;
+                    return (level - 46) / (58 - 46) * 2940;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 46;
+                    if (volume >= 2940) return 58;
+                    return 46 + (volume / 2940) * (58 - 46);
+                }
+            },
+            'hoa-binh': {
+                name: 'Đập Hòa Bình',
+                river: 'Sông Đà',
+                normalLevel: 117, // Hbt - mét
+                minLevel: 80, // Hc - mét
+                totalCapacity: 9862, // Wtb - triệu m³
+                usefulCapacity: 6062, // Whi - triệu m³
+                maxDischarge: 37800, // m³/s
+                minDischarge: 204, // m³/s
+                power: 1920, // MW
+                operation: 1994, // Năm
+                levelVolumeFunction: function(level) {
+                    if (level < 80) return 0;
+                    if (level > 117) return 9862;
+                    return (level - 80) / (117 - 80) * 9862;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 80;
+                    if (volume >= 9862) return 117;
+                    return 80 + (volume / 9862) * (117 - 80);
+                }
+            },
+            'son-la': {
+                name: 'Đập Sơn La',
+                river: 'Sông Đà',
+                normalLevel: 215, // Hbt - mét
+                minLevel: 175, // Hc - mét
+                totalCapacity: 9260, // Wtb - triệu m³
+                usefulCapacity: 6504, // Whi - triệu m³
+                maxDischarge: 32400, // m³/s
+                minDischarge: 320, // m³/s
+                power: 2400, // MW
+                operation: 2012, // Năm
+                levelVolumeFunction: function(level) {
+                    if (level < 175) return 0;
+                    if (level > 215) return 9260;
+                    return (level - 175) / (215 - 175) * 9260;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 175;
+                    if (volume >= 9260) return 215;
+                    return 175 + (volume / 9260) * (215 - 175);
+                }
+            },
+            'lai-chau': {
+                name: 'Đập Lai Châu',
+                river: 'Sông Đà',
+                normalLevel: 295, // Hbt - mét
+                minLevel: 265, // Hc - mét
+                totalCapacity: 1215, // Wtb - triệu m³
+                usefulCapacity: 799.7, // Whi - triệu m³
+                maxDischarge: 15120, // m³/s
+                minDischarge: null, // m³/s
+                power: 1200, // MW
+                operation: 2016, // Năm (dự kiến)
+                levelVolumeFunction: function(level) {
+                    if (level < 265) return 0;
+                    if (level > 295) return 1215;
+                    return (level - 265) / (295 - 265) * 1215;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 265;
+                    if (volume >= 1215) return 295;
+                    return 265 + (volume / 1215) * (295 - 265);
+                }
+            },
+            'ban-chat': {
+                name: 'Đập Bản Chát',
+                river: 'Sông Nậm Mu',
+                normalLevel: 475, // Hbt - mét
+                minLevel: 431, // Hc - mét
+                totalCapacity: 2137.7, // Wtb - triệu m³
+                usefulCapacity: 1702.4, // Whi - triệu m³
+                maxDischarge: 2200, // m³/s
+                minDischarge: null, // m³/s
+                power: 220, // MW
+                operation: 2013, // Năm
+                levelVolumeFunction: function(level) {
+                    if (level < 431) return 0;
+                    if (level > 475) return 2137.7;
+                    return (level - 431) / (475 - 431) * 2137.7;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 431;
+                    if (volume >= 2137.7) return 475;
+                    return 431 + (volume / 2137.7) * (475 - 431);
+                }
+            },
+            'huoi-quang': {
+                name: 'Đập Huội Quảng',
+                river: 'Sông Nậm Mu',
+                normalLevel: 370, // Hbt - mét
+                minLevel: 368, // Hc - mét
+                totalCapacity: 184.2, // Wtb - triệu m³
+                usefulCapacity: 16.3, // Whi - triệu m³
+                maxDischarge: 7500, // m³/s
+                minDischarge: 5, // m³/s
+                power: 520, // MW
+                operation: 2015, // Năm (dự kiến)
+                levelVolumeFunction: function(level) {
+                    if (level < 368) return 0;
+                    if (level > 370) return 184.2;
+                    return (level - 368) / (370 - 368) * 184.2;
+                },
+                volumeLevelFunction: function(volume) {
+                    if (volume <= 0) return 368;
+                    if (volume >= 184.2) return 370;
+                    return 368 + (volume / 184.2) * (370 - 368);
+                }
+            }
+        };
+
+        // Dữ liệu các đường diễn toán
+        const routingPathsData = {
+            'lai-chau-son-la': {
+                name: 'Lai Châu → Sơn La',
+                river: 'Sông Đà',
+                length: 131, // km
+                defaultK: 5, // giờ (thông số mặc định)
+                defaultX: 0.3, // hệ số trọng số mặc định
+                upstream: 'lai-chau',
+                downstream: 'son-la'
+            },
+            'ban-chat-huoi-quang': {
+                name: 'Bản Chát → Huội Quảng',
+                river: 'Sông Nậm Mu',
+                length: 28, // km
+                defaultK: 2, // giờ
+                defaultX: 0.3,
+                upstream: 'ban-chat',
+                downstream: 'huoi-quang'
+            },
+            'huoi-quang-son-la': {
+                name: 'Huội Quảng → Sơn La',
+                river: 'Sông Nậm Mu/Sông Đà',
+                length: 20, // km (ước tính)
+                defaultK: 1.5, // giờ
+                defaultX: 0.25,
+                upstream: 'huoi-quang',
+                downstream: 'son-la'
+            },
+            'son-la-hoa-binh': {
+                name: 'Sơn La → Hòa Bình',
+                river: 'Sông Đà',
+                length: 123, // km (ước tính từ đồ thị)
+                defaultK: 4.5, // giờ
+                defaultX: 0.3,
+                upstream: 'son-la',
+                downstream: 'hoa-binh'
+            },
+            'thac-ba-viet-tri': {
+                name: 'Thác Bà → Việt Trì',
+                river: 'Sông Chảy/Sông Hồng',
+                length: 98, // km (ước tính)
+                defaultK: 4, // giờ
+                defaultX: 0.3,
+                upstream: 'thac-ba',
+                downstream: 'viet-tri'
+            },
+            'tuyen-quang-viet-tri': {
+                name: 'Tuyên Quang → Việt Trì',
+                river: 'Sông Gâm/Sông Hồng',
+                length: 85, // km (ước tính)
+                defaultK: 3.5, // giờ
+                defaultX: 0.3,
+                upstream: 'tuyen-quang',
+                downstream: 'viet-tri'
+            },
+            'hoa-binh-viet-tri': {
+                name: 'Hòa Bình → Việt Trì',
+                river: 'Sông Đà/Sông Hồng',
+                length: 74, // km (ước tính)
+                defaultK: 3, // giờ
+                defaultX: 0.3,
+                upstream: 'hoa-binh',
+                downstream: 'viet-tri'
+            }
+        };
+
+        // Thông tin về kết nối giữa các hồ trong hệ thống
+        const systemConnections = [
+            { 
+                from: 'lai-chau', 
+                to: 'son-la',
+                routingPath: 'lai-chau-son-la',
+                K: 5,
+                X: 0.3
+            },
+            { 
+                from: 'ban-chat', 
+                to: 'huoi-quang',
+                routingPath: 'ban-chat-huoi-quang',
+                K: 2,
+                X: 0.3
+            },
+            { 
+                from: 'huoi-quang', 
+                to: 'son-la',
+                routingPath: 'huoi-quang-son-la',
+                K: 1.5,
+                X: 0.25
+            },
+            { 
+                from: 'son-la', 
+                to: 'hoa-binh',
+                routingPath: 'son-la-hoa-binh',
+                K: 4.5,
+                X: 0.3
+            },
+            { 
+                from: 'hoa-binh', 
+                to: 'viet-tri',
+                routingPath: 'hoa-binh-viet-tri',
+                K: 3,
+                X: 0.3
+            },
+            { 
+                from: 'thac-ba', 
+                to: 'viet-tri',
+                routingPath: 'thac-ba-viet-tri',
+                K: 4,
+                X: 0.3
+            },
+            { 
+                from: 'tuyen-quang', 
+                to: 'viet-tri',
+                routingPath: 'tuyen-quang-viet-tri',
+                K: 3.5,
+                X: 0.3
+            }
+        ];
+
+        // Định nghĩa thứ tự tính toán (từ thượng nguồn xuống)
+        const calculationOrder = [
+            'lai-chau', 'ban-chat', 'huoi-quang', 'son-la', 'hoa-binh', 'thac-ba', 'tuyen-quang', 'viet-tri'
+        ];
+        
+        // Danh sách mã màu cho các hồ khi vẽ đồ thị
+        const reservoirColors = {
+            'lai-chau': '#3B82F6',   // Sông Đà: xanh dương
+            'son-la': '#60A5FA',
+            'hoa-binh': '#93C5FD',
+            'ban-chat': '#EC4899',    // Sông Nậm Mu: hồng
+            'huoi-quang': '#F472B6',
+            'thac-ba': '#10B981',     // Sông Chảy: xanh lá
+            'tuyen-quang': '#F59E0B', // Sông Gâm: vàng
+            'viet-tri': '#EF4444'     // Sông Hồng: đỏ
+        };
+
+        // Dữ liệu mô phỏng hệ thống sông Hồng đã cập nhật
+        const riverSystemData = {
+            reservoirs: [
+                { id: 'lai-chau', x: 180, y: 80, name: 'Lai Châu', river: 'song-da' },
+                { id: 'son-la', x: 240, y: 160, name: 'Sơn La', river: 'song-da' },
+                { id: 'hoa-binh', x: 300, y: 240, name: 'Hòa Bình', river: 'song-da' },
+                { id: 'thac-ba', x: 120, y: 200, name: 'Thác Bà', river: 'song-chay' },
+                { id: 'tuyen-quang', x: 220, y: 280, name: 'Tuyên Quang', river: 'song-gam' },
+                { id: 'ban-chat', x: 100, y: 100, name: 'Bản Chát', river: 'song-nam-mu' },
+                { id: 'huoi-quang', x: 140, y: 130, name: 'Huội Quảng', river: 'song-nam-mu' }
+            ],
+            stations: [
+                { id: 'viet-tri', x: 360, y: 320, name: 'Việt Trì', river: 'song-hong' },
+                { id: 'son-tay', x: 380, y: 270, name: 'Sơn Tây', river: 'song-hong' },
+                { id: 'ha-noi', x: 420, y: 360, name: 'Hà Nội', river: 'song-hong' },
+                { id: 'hung-yen', x: 460, y: 400, name: 'Hưng Yên', river: 'song-hong' }
+            ],
+            rivers: [
+                // Sông Đà (xanh)
+                { class: 'song-da', points: [[180, 80], [240, 160], [300, 240], [340, 285]] },
+                
+                // Sông Chảy (xanh lá)
+                { class: 'song-chay', points: [[120, 200], [220, 250], [310, 300]] },
+                
+                // Sông Gâm (vàng)
+                { class: 'song-gam', points: [[220, 280], [280, 300], [310, 310]] },
+                
+                // Sông Nậm Mu (hồng)
+                { class: 'song-nam-mu', points: [[100, 100], [140, 130], [180, 150]] },
+                
+                // Sông Hồng (sau khi hợp lưu - đỏ)
+                { class: 'song-hong', points: [[360, 320], [380, 340], [420, 360], [460, 400]] }
+            ],
+            connections: [
+                // Kết nối Nậm Mu với Sông Đà
+                { class: 'song-nam-mu', points: [[180, 150], [210, 155]] },
+                // Kết nối Việt Trì từ Sông Đà
+                { class: 'song-da', points: [[340, 285], [360, 320]] },
+                // Kết nối Việt Trì từ Sông Chảy
+                { class: 'song-chay', points: [[310, 300], [360, 320]] },
+                // Kết nối Việt Trì từ Sông Gâm
+                { class: 'song-gam', points: [[310, 310], [360, 320]] }
+            ]
+        };
+
+        // Biến lưu biểu đồ
+        let lineChart = null;
+        let routingChart = null;
+        let levelChart = null;
+        let outflowChart = null;
+        
+        // Biến lưu trữ dữ liệu diễn toán
+        let inflowData = [];
+        let outflowData = [];
+        let routingResults = [];
+        
+        // Biến lưu trữ kết quả mô phỏng hệ thống
+        let systemResults = [];
+        let animationInterval = null;
+        let currentTimeIndex = 0;
+        
+        // Khởi tạo ứng dụng khi trang được tải hoàn tất
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Trang đã tải xong, bắt đầu khởi tạo ứng dụng");
+            initApp();
+        });
+
+        // Hiển thị thông báo nổi
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('calculation-toast');
+            
+            // Thiết lập nội dung và màu sắc
+            toast.querySelector('p').textContent = message;
+            
+            // Đặt loại thông báo
+            if (type === 'success') {
+                toast.classList.remove('bg-red-100', 'border-red-500', 'text-red-700', 'dark:bg-red-800', 'dark:text-red-200');
+                toast.classList.add('bg-green-100', 'border-green-500', 'text-green-700', 'dark:bg-green-800', 'dark:text-green-200');
+            } else {
+                toast.classList.remove('bg-green-100', 'border-green-500', 'text-green-700', 'dark:bg-green-800', 'dark:text-green-200');
+                toast.classList.add('bg-red-100', 'border-red-500', 'text-red-700', 'dark:bg-red-800', 'dark:text-red-200');
+            }
+            
+            // Hiển thị và ẩn thông báo
+            toast.classList.remove('hidden');
+            setTimeout(function() {
+                toast.classList.remove('opacity-0');
+            }, 10);
+            
+            setTimeout(function() {
+                toast.classList.add('opacity-0');
+                setTimeout(function() {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // Khởi tạo ứng dụng
+        function initApp() {
+            console.log("Đang khởi tạo ứng dụng...");
+            
+            // Thiết lập sự kiện cho tab
+            document.getElementById('regulation-tab').addEventListener('click', function() {
+                switchTab('regulation');
+            });
+            
+            document.getElementById('routing-tab').addEventListener('click', function() {
+                switchTab('routing');
+            });
+            
+            document.getElementById('system-tab').addEventListener('click', function() {
+                switchTab('system');
+            });
+            
+            // Thiết lập sự kiện thay đổi chọn hồ chứa
+            document.getElementById('reservoir-select').addEventListener('change', handleReservoirChange);
+            
+            // Thiết lập sự kiện nút tính toán điều tiết
+            document.getElementById('calculate-btn').addEventListener('click', function() {
+                console.log("Nút tính toán điều tiết đã được nhấn");
+                calculateRegulation();
+            });
+            
+            // Thiết lập sự kiện cho phần diễn toán
+            document.getElementById('routing-path').addEventListener('change', handleRoutingPathChange);
+            
+            document.getElementById('inflow-pattern').addEventListener('change', function() {
+                if (this.value !== 'custom') {
+                    document.getElementById('generate-pattern').classList.remove('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('generate-pattern').disabled = false;
+                }
+            });
+            
+            document.getElementById('generate-pattern').addEventListener('click', generateInflowPattern);
+            
+            document.getElementById('expand-table').addEventListener('click', function() {
+                openInflowModal();
+            });
+            
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('inflow-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('apply-bulk-edit').addEventListener('click', applyBulkEdit);
+            
+            document.getElementById('save-inflow-data').addEventListener('click', function() {
+                saveInflowData();
+                document.getElementById('inflow-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('routing-btn').addEventListener('click', calculateRouting);
+            
+            document.getElementById('download-results').addEventListener('click', downloadRoutingResults);
+            
+            // Thiết lập sự kiện cho tab mô phỏng hệ thống
+            document.getElementById('system-btn').addEventListener('click', calculateSystemSimulation);
+            
+            document.getElementById('time-slider').addEventListener('input', function() {
+                updateSystemVisualization(parseInt(this.value));
+            });
+            
+            document.getElementById('play-pause').addEventListener('click', toggleAnimation);
+            
+            document.getElementById('view-table').addEventListener('click', function() {
+                document.getElementById('system-table-modal').classList.remove('hidden');
+            });
+            
+            document.getElementById('close-system-table').addEventListener('click', function() {
+                document.getElementById('system-table-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('export-csv').addEventListener('click', exportSystemResultsToCSV);
+            
+            // Khởi tạo bảng dữ liệu lưu lượng đến
+            initializeInflowTable();
+            
+            // Khởi tạo mô phỏng hệ thống sông
+            drawRiverSystem();
+
+            // Kiểm tra cài đặt chế độ tối/sáng của hệ thống
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+
+            // Lắng nghe thay đổi trong tùy chọn màu sắc
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                // Vẽ lại hệ thống sông khi màu sắc thay đổi
+                drawRiverSystem();
+                // Cập nhật biểu đồ nếu tồn tại
+                if (lineChart) {
+                    updateChartColors(lineChart);
+                }
+                if (routingChart) {
+                    updateChartColors(routingChart);
+                }
+                if (levelChart) {
+                    updateChartColors(levelChart);
+                }
+                if (outflowChart) {
+                    updateChartColors(outflowChart);
+                }
+            });
+            
+            console.log("Ứng dụng đã được khởi tạo thành công");
+        }
+        
+        // Chuyển đổi giữa các tab
+        function switchTab(tabName) {
+            // Xóa trạng thái active từ tất cả các tab
+            document.querySelectorAll('.tab-button').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(function(content) {
+                content.classList.remove('active');
+            });
+            
+            // Thêm trạng thái active cho tab được chọn
+            document.getElementById(tabName + '-tab').classList.add('active');
+            document.getElementById(tabName + '-content').classList.add('active');
+            
+            // Nếu tab là routing, cần vẽ lại bảng và cập nhật giao diện
+            if (tabName === 'routing') {
+                if (document.getElementById('routing-path').value) {
+                    handleRoutingPathChange();
+                }
+            }
+            
+            // Dừng animation khi chuyển tab
+            if (tabName !== 'system' && animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+                document.getElementById('play-pause').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path></svg>';
+            }
+        }
+
+        // Xử lý thay đổi lựa chọn hồ chứa
+        function handleReservoirChange() {
+            console.log("Đang xử lý thay đổi lựa chọn hồ chứa");
+            
+            const reservoirSelect = document.getElementById('reservoir-select');
+            const selectedValue = reservoirSelect.value;
+            const reservoirInfo = document.getElementById('reservoir-info');
+            
+            if (selectedValue && reservoirData[selectedValue]) {
+                const reservoir = reservoirData[selectedValue];
+                console.log("Đã chọn hồ chứa:", reservoir.name);
+                
+                // Cập nhật thông tin hồ chứa
+                document.getElementById('reservoir-name').textContent = reservoir.name;
+                document.getElementById('reservoir-capacity').textContent = `${reservoir.totalCapacity} triệu m³`;
+                document.getElementById('reservoir-normal-level').textContent = `${reservoir.normalLevel} m`;
+                document.getElementById('reservoir-min-level').textContent = `${reservoir.minLevel} m`;
+                document.getElementById('reservoir-useful-capacity').textContent = `${reservoir.usefulCapacity} triệu m³`;
+                document.getElementById('reservoir-max-discharge').textContent = reservoir.maxDischarge ? `${reservoir.maxDischarge} m³/s` : 'Không có';
+                document.getElementById('reservoir-min-discharge').textContent = reservoir.minDischarge ? `${reservoir.minDischarge} m³/s` : 'Không có';
+                document.getElementById('reservoir-power').textContent = `${reservoir.power} MW`;
+                document.getElementById('reservoir-operation').textContent = reservoir.operation;
+                
+                // Hiển thị phần thông tin hồ chứa
+                reservoirInfo.classList.remove('hidden');
+                
+                // Đặt mực nước ban đầu bằng mực nước bình thường
+                document.getElementById('initial-level').value = reservoir.normalLevel;
+                // Xóa các input khác
+                document.getElementById('inflow').value = '';
+                document.getElementById('target-level').value = '';
+                document.getElementById('target-outflow').value = '';
+                
+                // Làm nổi bật hồ chứa được chọn trên bản đồ
+                highlightReservoir(selectedValue);
+            } else {
+                console.log("Không có hồ chứa nào được chọn hoặc không tìm thấy dữ liệu");
+                // Ẩn phần thông tin hồ chứa nếu không có lựa chọn hợp lệ
+                reservoirInfo.classList.add('hidden');
+            }
+            
+            // Ẩn phần kết quả khi thay đổi lựa chọn
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('no-results').classList.remove('hidden');
+            
+            console.log("Đã hoàn tất xử lý thay đổi lựa chọn hồ chứa");
+        }
+
+        // Tính toán điều tiết hồ chứa
+        function calculateRegulation() {
+            console.log("Bắt đầu tính toán điều tiết...");
+            
+            const selectedValue = document.getElementById('reservoir-select').value;
+            
+            if (!selectedValue || !reservoirData[selectedValue]) {
+                alert('Vui lòng chọn một hồ chứa');
+                console.error("Chưa chọn hồ chứa hoặc không tìm thấy dữ liệu hồ chứa");
+                return;
+            }
+            
+            const reservoir = reservoirData[selectedValue];
+            console.log("Tính toán cho hồ chứa:", reservoir.name);
+            
+            // Lấy giá trị đầu vào
+            const initialLevelInput = document.getElementById('initial-level').value;
+            const inflowInput = document.getElementById('inflow').value;
+            const regulationTimeInput = document.getElementById('regulation-time').value;
+            const targetLevelInput = document.getElementById('target-level').value;
+            const targetOutflowInput = document.getElementById('target-outflow').value;
+            
+            console.log("Dữ liệu đầu vào:", {
+                initialLevel: initialLevelInput,
+                inflow: inflowInput,
+                regulationTime: regulationTimeInput,
+                targetLevel: targetLevelInput,
+                targetOutflow: targetOutflowInput
+            });
+            
+            // Chuyển đổi sang số
+            const initialLevel = parseFloat(initialLevelInput);
+            const inflow = parseFloat(inflowInput);
+            const regulationTime = parseFloat(regulationTimeInput);
+            const targetLevel = targetLevelInput ? parseFloat(targetLevelInput) : null;
+            const targetOutflow = targetOutflowInput ? parseFloat(targetOutflowInput) : null;
+            
+            // Kiểm tra giá trị đầu vào
+            if (isNaN(initialLevel) || isNaN(inflow) || isNaN(regulationTime) || regulationTime <= 0) {
+                alert('Vui lòng nhập giá trị số hợp lệ cho Mực nước ban đầu, Lưu lượng đến và Thời gian điều tiết');
+                console.error("Dữ liệu đầu vào không hợp lệ");
+                return;
+            }
+            
+            if (initialLevel < reservoir.minLevel || initialLevel > reservoir.normalLevel * 1.05) {
+                alert(`Mực nước ban đầu nên nằm trong khoảng từ ${reservoir.minLevel} m đến ${reservoir.normalLevel * 1.05} m`);
+                console.error("Mực nước ban đầu nằm ngoài phạm vi hợp lệ");
+                return;
+            }
+
+            // Tính dung tích hồ chứa ban đầu (triệu m³)
+            const initialVolume = reservoir.levelVolumeFunction(initialLevel);
+            console.log("Dung tích ban đầu:", initialVolume, "triệu m³");
+            
+            // Tính tổng lượng nước đến trong khoảng thời gian (triệu m³)
+            const inflowVolume = inflow * regulationTime * 3600 / 1000000; // Chuyển đổi m³/s thành triệu m³
+            console.log("Lượng nước đến:", inflowVolume, "triệu m³");
+            
+            let finalVolume, requiredOutflow, finalLevel;
+            
+            if (targetLevel !== null && !isNaN(targetLevel)) {
+                console.log("Trường hợp 1: Tính toán để đạt mực nước mục tiêu", targetLevel, "m");
+                
+                // Trường hợp 1: Tính toán điều tiết để đạt mực nước mục tiêu
+                if (targetLevel < reservoir.minLevel || targetLevel > reservoir.normalLevel) {
+                    alert(`Mực nước mục tiêu nên nằm trong khoảng từ ${reservoir.minLevel} m đến ${reservoir.normalLevel} m`);
+                    console.error("Mực nước mục tiêu nằm ngoài phạm vi hợp lệ");
+                    return;
+                }
+                
+                // Tính dung tích mục tiêu
+                finalVolume = reservoir.levelVolumeFunction(targetLevel);
+                console.log("Dung tích mục tiêu:", finalVolume, "triệu m³");
+                
+                // Tính lưu lượng xả cần thiết để đạt mực nước mục tiêu
+                const volumeChange = finalVolume - initialVolume;
+                console.log("Thay đổi dung tích:", volumeChange, "triệu m³");
+                
+                const waterBalance = inflowVolume - volumeChange;
+                console.log("Cân bằng nước:", waterBalance, "triệu m³");
+                
+                requiredOutflow = waterBalance * 1000000 / (regulationTime * 3600); // Chuyển đổi sang m³/s
+                finalLevel = targetLevel;
+                
+                console.log("Lưu lượng xả yêu cầu:", requiredOutflow, "m³/s");
+                console.log("Mực nước cuối:", finalLevel, "m");
+            } else if (targetOutflow !== null && !isNaN(targetOutflow)) {
+                console.log("Trường hợp 2: Tính toán với lưu lượng xả nhất định", targetOutflow, "m³/s");
+                
+                // Trường hợp 2: Tính toán mực nước thay đổi với lưu lượng xả nhất định
+                if (targetOutflow < 0) {
+                    alert('Lưu lượng xả mục tiêu phải không âm');
+                    console.error("Lưu lượng xả mục tiêu là số âm");
+                    return;
+                }
+                
+                // Tính thể tích nước xả
+                const outflowVolume = targetOutflow * regulationTime * 3600 / 1000000; // Chuyển đổi sang triệu m³
+                console.log("Lượng nước xả:", outflowVolume, "triệu m³");
+                
+                // Tính dung tích mới
+                finalVolume = initialVolume + inflowVolume - outflowVolume;
+                console.log("Dung tích cuối:", finalVolume, "triệu m³");
+                
+                // Nội suy để tìm mực nước tương ứng
+                if (finalVolume <= 0) {
+                    finalLevel = 0; // Hồ rỗng (không thực tế)
+                    console.log("Cảnh báo: Hồ chứa rỗng (không thực tế)");
+                } else if (finalVolume >= reservoir.totalCapacity) {
+                    finalLevel = reservoir.normalLevel * 1.05; // Hồ quá dung tích (tình huống khẩn cấp)
+                    console.log("Cảnh báo: Hồ chứa vượt quá dung tích (tình huống khẩn cấp)");
+                } else {
+                    // Tìm mực nước bằng nội suy tuyến tính đơn giản
+                    finalLevel = reservoir.volumeLevelFunction(finalVolume);
+                    console.log("Tính toán mực nước từ dung tích:", finalVolume, "→", finalLevel, "m");
+                }
+                
+                requiredOutflow = targetOutflow;
+                console.log("Mực nước cuối:", finalLevel, "m");
+            } else {
+                console.log("Trường hợp 3: Tính toán mực nước tăng tự nhiên khi không xả");
+                
+                // Trường hợp 3: Tính toán mực nước tăng tự nhiên khi không xả
+                requiredOutflow = 0;
+                finalVolume = initialVolume + inflowVolume;
+                console.log("Dung tích cuối (không xả):", finalVolume, "triệu m³");
+                
+                if (finalVolume >= reservoir.totalCapacity) {
+                    finalLevel = reservoir.normalLevel * 1.05; // Hồ quá dung tích (tình huống khẩn cấp)
+                    console.log("Cảnh báo: Hồ chứa vượt quá dung tích (tình huống khẩn cấp)");
+                } else {
+                    // Tìm mực nước bằng nội suy tuyến tính đơn giản
+                    finalLevel = reservoir.volumeLevelFunction(finalVolume);
+                    console.log("Tính toán mực nước từ dung tích:", finalVolume, "→", finalLevel, "m");
+                }
+                
+                console.log("Lưu lượng xả yêu cầu:", requiredOutflow, "m³/s");
+                console.log("Mực nước cuối:", finalLevel, "m");
+            }
+            
+            // Xác định trạng thái vận hành
+            console.log("Xác định trạng thái vận hành...");
+            
+            let statusMessage = '';
+            let recommendations = '';
+            
+            if (finalLevel > reservoir.normalLevel) {
+                if (finalLevel > reservoir.normalLevel * 1.05) {
+                    statusMessage = `<span class="text-red-500 font-bold">NGUY HIỂM: Mực nước vượt quá mực nước khẩn cấp (${(reservoir.normalLevel * 1.05).toFixed(2)} m)</span>`;
+                    recommendations = `Tăng lưu lượng xả ngay lập tức để tránh tràn đập. Xem xét vận hành tràn xả lũ khẩn cấp.`;
+                    console.log("Trạng thái: NGUY HIỂM - vượt mực nước khẩn cấp");
+                } else {
+                    statusMessage = `<span class="text-orange-500 font-bold">CẢNH BÁO: Mực nước vượt quá mực nước dâng bình thường (${reservoir.normalLevel} m)</span>`;
+                    recommendations = `Tăng lưu lượng xả để giảm mực nước về mức dâng bình thường.`;
+                    console.log("Trạng thái: CẢNH BÁO - vượt mực nước dâng bình thường");
+                }
+            } else if (finalLevel < reservoir.minLevel) {
+                statusMessage = `<span class="text-orange-500 font-bold">CẢNH BÁO: Mực nước dưới mực nước chết (${reservoir.minLevel} m)</span>`;
+                recommendations = `Giảm lưu lượng xả để duy trì mực nước tối thiểu cho phát điện và các mục đích khác.`;
+                console.log("Trạng thái: CẢNH BÁO - dưới mực nước chết");
+            } else {
+                statusMessage = `<span class="text-green-500 font-bold">BÌNH THƯỜNG: Mực nước trong phạm vi vận hành</span>`;
+                recommendations = `Duy trì chiến lược điều tiết hiện tại. Điều chỉnh lưu lượng xả dựa trên yêu cầu hạ du.`;
+                console.log("Trạng thái: BÌNH THƯỜNG - trong phạm vi vận hành");
+            }
+            
+            // Kiểm tra nếu lưu lượng xả yêu cầu vượt quá giới hạn
+            if (reservoir.maxDischarge !== null && requiredOutflow > reservoir.maxDischarge) {
+                statusMessage += `<br><span class="text-red-500 font-bold">CẢNH BÁO: Lưu lượng xả yêu cầu (${requiredOutflow.toFixed(2)} m³/s) vượt quá công suất xả tối đa (${reservoir.maxDischarge} m³/s)</span>`;
+                recommendations += `<br>Giới hạn lưu lượng xả tối đa sẽ không cho phép đạt mực nước mục tiêu trong thời gian quy định. Xem xét kéo dài thời gian điều tiết hoặc điều chỉnh mục tiêu.`;
+                console.log("Cảnh báo: Lưu lượng xả vượt quá công suất tối đa");
+            }
+            
+            if (reservoir.minDischarge !== null && requiredOutflow < reservoir.minDischarge) {
+                statusMessage += `<br><span class="text-orange-500 font-bold">CẢNH BÁO: Lưu lượng xả yêu cầu (${requiredOutflow.toFixed(2)} m³/s) dưới mức lưu lượng xả tối thiểu (${reservoir.minDischarge} m³/s)</span>`;
+                recommendations += `<br>Phải duy trì lưu lượng xả tối thiểu theo yêu cầu môi trường. Điều chỉnh chiến lược điều tiết cho phù hợp.`;
+                console.log("Cảnh báo: Lưu lượng xả dưới mức tối thiểu");
+            }
+            
+            console.log("Đang cập nhật giao diện kết quả...");
+            
+            // Cập nhật giao diện kết quả
+            document.getElementById('initial-volume').textContent = `${initialVolume.toFixed(2)} triệu m³`;
+            document.getElementById('final-volume').textContent = `${finalVolume.toFixed(2)} triệu m³`;
+            document.getElementById('volume-change').textContent = `${(finalVolume - initialVolume).toFixed(2)} triệu m³`;
+            document.getElementById('required-outflow').textContent = `${requiredOutflow.toFixed(2)} m³/s`;
+            document.getElementById('final-level').textContent = `${finalLevel.toFixed(2)} m`;
+            document.getElementById('status-message').innerHTML = statusMessage;
+            document.getElementById('recommendations').innerHTML = recommendations;
+            
+            // Hiển thị kết quả
+            document.getElementById('no-results').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+            
+            console.log("Đã hiển thị kết quả tính toán");
+            
+            // Tạo và hiển thị biểu đồ
+            console.log("Tạo biểu đồ điều tiết...");
+            createRegulationChart(reservoir, initialLevel, finalLevel, inflow, requiredOutflow, regulationTime);
+            
+            // Hiển thị thông báo
+            showToast("Tính toán hoàn tất. Kết quả đã được hiển thị.", "success");
+            
+            console.log("Hoàn tất tính toán điều tiết");
+        }
+
+        // Tạo biểu đồ điều tiết
+        function createRegulationChart(reservoir, initialLevel, finalLevel, inflow, outflow, timeHours) {
+            console.log("Đang tạo biểu đồ điều tiết...");
+            
+            try {
+                // Tạo dữ liệu theo giờ
+                const timePoints = parseInt(timeHours) + 1;
+                const hours = [];
+                const waterLevels = [];
+                const inflows = [];
+                const outflows = [];
+                
+                for (let i = 0; i < timePoints; i++) {
+                    hours.push(i);
+                    
+                    // Thay đổi mực nước theo thời gian (đơn giản hóa thành thay đổi tuyến tính)
+                    const progress = i / timeHours;
+                    waterLevels.push(initialLevel + (finalLevel - initialLevel) * progress);
+                    
+                    // Lưu lượng đến và lưu lượng xả
+                    inflows.push(inflow);
+                    outflows.push(outflow);
+                }
+                
+                console.log("Số điểm dữ liệu:", timePoints);
+                console.log("Mẫu dữ liệu mực nước:", waterLevels.slice(0, 3), "...");
+                
+                // Lấy context của canvas
+                const canvas = document.getElementById('lineChart');
+                if (!canvas) {
+                    console.error("Không tìm thấy canvas để vẽ biểu đồ");
+                    return;
+                }
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Xác định chế độ tối/sáng
+                const isDarkMode = document.documentElement.classList.contains('dark');
+                
+                // Xác định màu biểu đồ dựa trên chế độ
+                const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+                
+                // Hủy biểu đồ cũ nếu tồn tại
+                if (lineChart) {
+                    console.log("Hủy biểu đồ cũ");
+                    lineChart.destroy();
+                }
+                
+                // Tạo biểu đồ mới
+                console.log("Tạo biểu đồ mới");
+                lineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: hours,
+                        datasets: [
+                            {
+                                label: 'Mực nước (m)',
+                                data: waterLevels,
+                                borderColor: '#5D5CDE',
+                                backgroundColor: 'rgba(93, 92, 222, 0.2)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Lưu lượng đến (m³/s)',
+                                data: inflows,
+                                borderColor: '#2563EB',
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                yAxisID: 'y1'
+                            },
+                            {
+                                label: 'Lưu lượng xả (m³/s)',
+                                data: outflows,
+                                borderColor: '#DC2626',
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Thời gian (giờ)',
+                                    color: textColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                },
+                                ticks: {
+                                    color: textColor
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Mực nước (m)',
+                                    color: textColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                },
+                                ticks: {
+                                    color: textColor
+                                },
+                                min: Math.max(0, Math.min(initialLevel, finalLevel) * 0.95, reservoir.minLevel * 0.95),
+                                max: Math.min(Math.max(initialLevel, finalLevel) * 1.05, reservoir.normalLevel * 1.1)
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Lưu lượng (m³/s)',
+                                    color: textColor
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                ticks: {
+                                    color: textColor
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                console.log("Đã tạo biểu đồ điều tiết thành công");
+            } catch (error) {
+                console.error("Lỗi khi tạo biểu đồ:", error);
+                // Hiển thị thông báo lỗi cho người dùng
+                showToast("Có lỗi xảy ra khi tạo biểu đồ. Vui lòng thử lại.", "error");
+            }
+        }
+
+        // Cập nhật màu sắc biểu đồ khi chủ đề thay đổi
+        function updateChartColors(chart) {
+            if (!chart) {
+                console.log("Không có biểu đồ để cập nhật màu sắc");
+                return;
+            }
+            
+            console.log("Cập nhật màu sắc biểu đồ theo chủ đề");
+            
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+            
+            // Cập nhật thang đo
+            chart.options.scales.x.grid.color = gridColor;
+            chart.options.scales.y.grid.color = gridColor;
+            chart.options.scales.x.ticks.color = textColor;
+            chart.options.scales.y.ticks.color = textColor;
+            chart.options.scales.y1.ticks.color = textColor;
+            chart.options.scales.x.title.color = textColor;
+            chart.options.scales.y.title.color = textColor;
+            chart.options.scales.y1.title.color = textColor;
+            
+            // Cập nhật chú thích
+            chart.options.plugins.legend.labels.color = textColor;
+            
+            chart.update();
+            
+            console.log("Đã cập nhật màu sắc biểu đồ");
+        }
+
+        // Vẽ mô phỏng hệ thống sông
+        function drawRiverSystem() {
+            console.log("Vẽ mô phỏng hệ thống sông...");
+            
+            const riverSystemDiv = document.getElementById('river-system');
+            if (!riverSystemDiv) {
+                console.error("Không tìm thấy phần tử river-system");
+                return;
+            }
+            
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const width = riverSystemDiv.clientWidth;
+            const height = riverSystemDiv.clientHeight;
+            
+            console.log("Kích thước khu vực vẽ:", width, "x", height);
+            
+            // Hệ số tỷ lệ
+            const scaleX = width / 500;
+            const scaleY = height / 450;
+            
+            // Màu sắc
+            const reservoirColor = isDarkMode ? '#1E40AF' : '#2563EB';
+            const stationColor = isDarkMode ? '#047857' : '#059669';
+            const textColor = isDarkMode ? '#E5E7EB' : '#1F2937';
+            const bgColor = isDarkMode ? '#111827' : '#EFF6FF';
+            
+            // Tạo SVG
+            let svg = `
+            <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="${bgColor}" />
+                
+                <!-- Sông -->
+                ${riverSystemData.rivers.map(river => {
+                    const points = river.points.map(p => `${p[0] * scaleX},${p[1] * scaleY}`).join(' ');
+                    return `<polyline points="${points}" class="${river.class}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+                }).join('')}
+                
+                <!-- Kết nối sông -->
+                ${riverSystemData.connections.map(conn => {
+                    const points = conn.points.map(p => `${p[0] * scaleX},${p[1] * scaleY}`).join(' ');
+                    return `<polyline points="${points}" class="${conn.class}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+                }).join('')}
+                
+                <!-- Hồ chứa -->
+                ${riverSystemData.reservoirs.map(reservoir => {
+                    return `
+                    <g id="reservoir-${reservoir.id}" class="reservoir-marker">
+                        <rect x="${(reservoir.x - 15) * scaleX}" y="${(reservoir.y - 15) * scaleY}" width="${30 * scaleX}" height="${30 * scaleY}" fill="${reservoirColor}" rx="5" ry="5" />
+                        <text x="${reservoir.x * scaleX}" y="${(reservoir.y + 30) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${12 * Math.min(scaleX, scaleY)}px">${reservoir.name}</text>
+                    </g>`;
+                }).join('')}
+                
+                <!-- Trạm đo -->
+                ${riverSystemData.stations.map(station => {
+                    return `
+                    <g id="station-${station.id}" class="station-marker">
+                        <circle cx="${station.x * scaleX}" cy="${station.y * scaleY}" r="${8 * Math.min(scaleX, scaleY)}" fill="${stationColor}" />
+                        <text x="${station.x * scaleX}" y="${(station.y + 20) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${10 * Math.min(scaleX, scaleY)}px">${station.name}</text>
+                    </g>`;
+                }).join('')}
+            </svg>
+            `;
+            
+            riverSystemDiv.innerHTML = svg;
+            
+            // Thêm sự kiện click cho các hồ chứa
+            document.querySelectorAll('.reservoir-marker').forEach(marker => {
+                marker.addEventListener('click', function() {
+                    const reservoirId = this.id.replace('reservoir-', '');
+                    const reservoirSelect = document.getElementById('reservoir-select');
+                    if (reservoirSelect.querySelector(`option[value="${reservoirId}"]`)) {
+                        reservoirSelect.value = reservoirId;
+                        handleReservoirChange();
+                    }
+                });
+                
+                // Thêm hiệu ứng hover
+                marker.addEventListener('mouseenter', function() {
+                    this.querySelector('rect').setAttribute('fill', '#4F46E5');
+                    this.style.cursor = 'pointer';
+                });
+                
+                marker.addEventListener('mouseleave', function() {
+                    this.querySelector('rect').setAttribute('fill', reservoirColor);
+                });
+            });
+            
+            // Thêm lớp CSS cho các dòng sông
+            const style = document.createElement('style');
+            style.textContent = `
+                .song-da { stroke: #3B82F6; }
+                .song-chay { stroke: #10B981; }
+                .song-gam { stroke: #F59E0B; }
+                .song-nam-mu { stroke: #EC4899; }
+                .song-hong { stroke: #EF4444; }
+            `;
+            document.head.appendChild(style);
+            
+            console.log("Đã vẽ xong mô phỏng hệ thống sông");
+        }
+
+        // Làm nổi bật hồ chứa được chọn trên bản đồ
+        function highlightReservoir(reservoirId) {
+            console.log("Làm nổi bật hồ chứa:", reservoirId);
+            
+            // Xóa làm nổi bật từ tất cả hồ chứa
+            document.querySelectorAll('.reservoir-marker rect').forEach(function(rect) {
+                rect.setAttribute('stroke', 'none');
+            });
+            
+            // Thêm hiệu ứng nổi bật cho hồ chứa được chọn
+            const selected = document.querySelector(`#reservoir-${reservoirId} rect`);
+            if (selected) {
+                selected.setAttribute('stroke', '#FBBF24');
+                selected.setAttribute('stroke-width', '3');
+                console.log("Đã làm nổi bật hồ chứa");
+            } else {
+                console.log("Không tìm thấy phần tử hồ chứa để làm nổi bật");
+            }
+        }
+        
+        // Xử lý thay đổi đường diễn toán
+        function handleRoutingPathChange() {
+            const routingPath = document.getElementById('routing-path').value;
+            const routingInfo = document.getElementById('routing-info');
+            
+            if (!routingPath || !routingPathsData[routingPath]) {
+                routingInfo.classList.add('hidden');
+                return;
+            }
+            
+            const pathData = routingPathsData[routingPath];
+            
+            // Hiển thị thông tin đường diễn toán
+            document.getElementById('routing-name').textContent = pathData.name;
+            document.getElementById('routing-length').textContent = `${pathData.length} km`;
+            document.getElementById('routing-k').textContent = `${pathData.defaultK} giờ`;
+            document.getElementById('routing-x').textContent = pathData.defaultX;
+            
+            routingInfo.classList.remove('hidden');
+            
+            // Điền giá trị mặc định vào input
+            document.getElementById('routing-k-input').value = pathData.defaultK;
+            document.getElementById('routing-x-input').value = pathData.defaultX;
+            
+            // Làm nổi bật đường diễn toán trên bản đồ
+            highlightRoutingPath(routingPath);
+        }
+        
+        // Làm nổi bật đường diễn toán trên bản đồ
+        function highlightRoutingPath(routingPathId) {
+            const pathData = routingPathsData[routingPathId];
+            if (!pathData) return;
+            
+            // Xóa tất cả highlight trước đó
+            document.querySelectorAll('.highlighted-route').forEach(function(elem) {
+                elem.classList.remove('highlighted-route');
+                elem.setAttribute('stroke-width', '5');
+            });
+            
+            // Xác định các hồ liên quan
+            const upstream = pathData.upstream;
+            const downstream = pathData.downstream;
+            
+            // Tìm và làm nổi bật hồ chứa đầu vào và đầu ra
+            highlightReservoirForRouting(upstream);
+            highlightReservoirForRouting(downstream);
+            
+            // Làm nổi bật dòng sông tương ứng
+            const riverClass = pathData.river.toLowerCase().replace('sông ', 'song-').replace(' ', '-');
+            const relevantRivers = document.querySelectorAll(`.${riverClass.split('/')[0]}`);
+            
+            relevantRivers.forEach(function(river) {
+                river.classList.add('highlighted-route');
+                river.setAttribute('stroke-width', '7');
+            });
+        }
+        
+        // Làm nổi bật hồ chứa cho diễn toán
+        function highlightReservoirForRouting(reservoirId) {
+            if (reservoirId === 'viet-tri') {
+                // Làm nổi bật trạm Việt Trì
+                const station = document.querySelector(`#station-${reservoirId} circle`);
+                if (station) {
+                    station.setAttribute('stroke', '#FBBF24');
+                    station.setAttribute('stroke-width', '3');
+                    station.setAttribute('r', parseInt(station.getAttribute('r')) * 1.2);
+                }
+            } else {
+                // Làm nổi bật hồ chứa
+                const reservoir = document.querySelector(`#reservoir-${reservoirId} rect`);
+                if (reservoir) {
+                    reservoir.setAttribute('stroke', '#FBBF24');
+                    reservoir.setAttribute('stroke-width', '3');
+                }
+            }
+        }
+        
+        // Khởi tạo bảng dữ liệu lưu lượng đến
+        function initializeInflowTable() {
+            const numSteps = parseInt(document.getElementById('num-steps').value) || 24;
+            inflowData = Array(numSteps).fill(0);
+            
+            updateInflowTable();
+            
+            // Thêm sự kiện cho thay đổi số bước thời gian
+            document.getElementById('num-steps').addEventListener('change', function() {
+                const newSteps = parseInt(this.value) || 24;
+                // Điều chỉnh mảng dữ liệu lưu lượng
+                if (newSteps > inflowData.length) {
+                    inflowData = [...inflowData, ...Array(newSteps - inflowData.length).fill(0)];
+                } else if (newSteps < inflowData.length) {
+                    inflowData = inflowData.slice(0, newSteps);
+                }
+                updateInflowTable();
+            });
+        }
+        
+        // Cập nhật bảng dữ liệu lưu lượng đến
+        function updateInflowTable() {
+            const tableBody = document.getElementById('inflow-table').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            inflowData.forEach((value, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2">${index}</td>
+                    <td class="px-3 py-2">
+                        <input type="number" class="inflow-value w-full bg-transparent border-gray-300 dark:border-gray-600 rounded"
+                               data-index="${index}" value="${value}">
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Thêm sự kiện cho các input
+            document.querySelectorAll('.inflow-value').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    inflowData[index] = parseFloat(this.value) || 0;
+                });
+            });
+        }
+        
+        // Mở modal nhập dữ liệu lưu lượng
+        function openInflowModal() {
+            const modalTableBody = document.getElementById('modal-inflow-table');
+            modalTableBody.innerHTML = '';
+            
+            inflowData.forEach((value, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2">${index}</td>
+                    <td class="px-3 py-2">
+                        <input type="number" class="modal-inflow-value w-full bg-transparent border-gray-300 dark:border-gray-600 rounded"
+                               data-index="${index}" value="${value}">
+                    </td>
+                `;
+                modalTableBody.appendChild(row);
+            });
+            
+            // Thiết lập giá trị cho trường sửa hàng loạt
+            document.getElementById('bulk-edit').value = inflowData.join(', ');
+            
+            // Thêm sự kiện cho các input trong modal
+            document.querySelectorAll('.modal-inflow-value').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.dataset.index);
+                    const newValue = parseFloat(this.value) || 0;
+                    
+                    // Cập nhật giá trị trong mảng tạm thời
+                    const modalInputs = document.querySelectorAll('.modal-inflow-value');
+                    const tempData = Array.from(modalInputs).map(input => parseFloat(input.value) || 0);
+                    
+                    // Cập nhật trường sửa hàng loạt
+                    document.getElementById('bulk-edit').value = tempData.join(', ');
+                });
+            });
+            
+            document.getElementById('inflow-modal').classList.remove('hidden');
+        }
+        
+        // Áp dụng chỉnh sửa hàng loạt
+        function applyBulkEdit() {
+            const bulkTextarea = document.getElementById('bulk-edit');
+            const values = bulkTextarea.value.split(',').map(val => parseFloat(val.trim()) || 0);
+            
+            // Cập nhật các input trong modal
+            const modalInputs = document.querySelectorAll('.modal-inflow-value');
+            modalInputs.forEach((input, index) => {
+                if (index < values.length) {
+                    input.value = values[index];
+                }
+            });
+        }
+        
+        // Lưu dữ liệu lưu lượng từ modal
+        function saveInflowData() {
+            const modalInputs = document.querySelectorAll('.modal-inflow-value');
+            inflowData = Array.from(modalInputs).map(input => parseFloat(input.value) || 0);
+            
+            // Cập nhật bảng chính
+            updateInflowTable();
+        }
+        
+        // Tạo mẫu dữ liệu lưu lượng theo kiểu
+        function generateInflowPattern() {
+            const pattern = document.getElementById('inflow-pattern').value;
+            const numSteps = parseInt(document.getElementById('num-steps').value) || 24;
+            
+            let peakFlow = 100; // Giá trị lưu lượng đỉnh mặc định
+            
+            switch (pattern) {
+                case 'triangular':
+                    // Mẫu hình tam giác (đỉnh ở giữa)
+                    inflowData = Array(numSteps).fill(0).map((_, i) => {
+                        const ratio = i < numSteps / 2 ? i / (numSteps / 2) : (numSteps - i) / (numSteps / 2);
+                        return Math.round(peakFlow * ratio);
+                    });
+                    break;
+                    
+                case 'trapezoidal':
+                    // Mẫu hình thang (đạt đỉnh và duy trì một đoạn)
+                    inflowData = Array(numSteps).fill(0).map((_, i) => {
+                        let ratio;
+                        if (i < numSteps / 4) {
+                            ratio = i / (numSteps / 4); // Phần tăng
+                        } else if (i < 3 * numSteps / 4) {
+                            ratio = 1; // Phần bằng
+                        } else {
+                            ratio = (numSteps - i) / (numSteps / 4); // Phần giảm
+                        }
+                        return Math.round(peakFlow * ratio);
+                    });
+                    break;
+                    
+                case 'sinusoidal':
+                    // Mẫu hình sin (lũ tự nhiên)
+                    inflowData = Array(numSteps).fill(0).map((_, i) => {
+                        const ratio = Math.sin(Math.PI * i / numSteps);
+                        return Math.round(peakFlow * ratio);
+                    });
+                    break;
+                    
+                default:
+                    return;
+            }
+            
+            // Cập nhật bảng
+            updateInflowTable();
+            
+            // Hiển thị thông báo
+            showToast(`Đã tạo mẫu dữ liệu lưu lượng kiểu ${pattern}`, "success");
+        }
+        
+        // Tính toán diễn toán Muskingum
+        function calculateRouting() {
+            // Kiểm tra đường diễn toán đã được chọn
+            const routingPath = document.getElementById('routing-path').value;
+            if (!routingPath || !routingPathsData[routingPath]) {
+                alert('Vui lòng chọn đường diễn toán');
+                return;
+            }
+            
+            // Lấy các thông số
+            const kValue = parseFloat(document.getElementById('routing-k-input').value);
+            const xValue = parseFloat(document.getElementById('routing-x-input').value);
+            const timeStep = parseFloat(document.getElementById('time-step').value);
+            
+            // Kiểm tra các giá trị đầu vào
+            if (isNaN(kValue) || kValue <= 0) {
+                alert('Hệ số K phải là số dương');
+                return;
+            }
+            
+            if (isNaN(xValue) || xValue < 0 || xValue > 0.5) {
+                alert('Hệ số X phải nằm trong khoảng 0-0.5');
+                return;
+            }
+            
+            if (isNaN(timeStep) || timeStep <= 0) {
+                alert('Bước thời gian phải là số dương');
+                return;
+            }
+            
+            // Kiểm tra giá trị K đảm bảo ổn định
+            if (kValue <= timeStep / (2 * (1 - xValue))) {
+                alert(`Để đảm bảo ổn định, K phải lớn hơn ${(timeStep / (2 * (1 - xValue))).toFixed(2)} giờ\nVui lòng tăng giá trị K hoặc giảm bước thời gian Δt`);
+                return;
+            }
+            
+            // Tính toán các hệ số Muskingum
+            const c0 = (timeStep - 2 * kValue * xValue) / (2 * kValue * (1 - xValue) + timeStep);
+            const c1 = (timeStep + 2 * kValue * xValue) / (2 * kValue * (1 - xValue) + timeStep);
+            const c2 = (2 * kValue * (1 - xValue) - timeStep) / (2 * kValue * (1 - xValue) + timeStep);
+            const cSum = c0 + c1 + c2;
+            
+            console.log("Các hệ số Muskingum:", { c0, c1, c2, cSum });
+            
+            // Kiểm tra nếu tổng hệ số gần bằng 1
+            if (Math.abs(cSum - 1) > 0.001) {
+                console.warn(`Tổng hệ số (${cSum.toFixed(4)}) không chính xác bằng 1, có thể sẽ có sai số.`);
+            }
+            
+            // Lưu lượng đến là dữ liệu từ người dùng
+            const inflows = [...inflowData];
+            
+            // Tính lưu lượng ra bằng phương pháp Muskingum
+            const outflows = [inflows[0]]; // Giả sử lưu lượng ra ban đầu bằng lưu lượng vào ban đầu
+            
+            for (let i = 1; i < inflows.length; i++) {
+                const q = c0 * inflows[i] + c1 * inflows[i-1] + c2 * outflows[i-1];
+                outflows.push(Math.max(0, q)); // Đảm bảo lưu lượng ra không âm
+            }
+            
+            // Lưu kết quả
+            outflowData = outflows;
+            
+            // Tạo danh sách kết quả chi tiết
+            routingResults = inflows.map((inflow, i) => {
+                return {
+                    time: i * timeStep,
+                    inflow: inflow,
+                    outflow: outflows[i],
+                    avgFlow: (inflow + outflows[i]) / 2
+                };
+            });
+            
+            // Hiển thị kết quả
+            document.getElementById('coef-c0').textContent = c0.toFixed(4);
+            document.getElementById('coef-c1').textContent = c1.toFixed(4);
+            document.getElementById('coef-c2').textContent = c2.toFixed(4);
+            document.getElementById('coef-sum').textContent = cSum.toFixed(4);
+            
+            // Hiển thị bảng kết quả
+            updateRoutingResultsTable(routingResults);
+            
+            // Tạo biểu đồ diễn toán
+            createRoutingChart(routingResults, timeStep);
+            
+            // Hiển thị kết quả
+            document.getElementById('no-routing-results').classList.add('hidden');
+            document.getElementById('routing-results').classList.remove('hidden');
+            
+            // Hiển thị thông báo
+            showToast("Tính toán diễn toán hoàn tất", "success");
+        }
+        
+        // Cập nhật bảng kết quả diễn toán
+        function updateRoutingResultsTable(results) {
+            const tableBody = document.getElementById('routing-results-table');
+            tableBody.innerHTML = '';
+            
+            results.forEach(result => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2">${result.time.toFixed(1)}</td>
+                    <td class="px-3 py-2">${result.inflow.toFixed(2)}</td>
+                    <td class="px-3 py-2">${result.outflow.toFixed(2)}</td>
+                    <td class="px-3 py-2">${result.avgFlow.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Tạo biểu đồ diễn toán
+        function createRoutingChart(results, timeStep) {
+            const labels = results.map(r => r.time);
+            const inflows = results.map(r => r.inflow);
+            const outflows = results.map(r => r.outflow);
+            
+            const canvas = document.getElementById('routingChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Xác định chế độ tối/sáng
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            
+            // Xác định màu biểu đồ dựa trên chế độ
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+            
+            // Hủy biểu đồ cũ nếu tồn tại
+            if (routingChart) {
+                routingChart.destroy();
+            }
+            
+            // Tạo biểu đồ mới
+            routingChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Lưu lượng đến (m³/s)',
+                            data: inflows,
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Lưu lượng ra (m³/s)',
+                            data: outflows,
+                            borderColor: '#DC2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Lưu lượng (m³/s)',
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    return `${label}: ${value.toFixed(2)} m³/s`;
+                                },
+                                title: function(context) {
+                                    return `Thời gian: ${context[0].label} giờ`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Tải xuống kết quả diễn toán dưới dạng CSV
+        function downloadRoutingResults() {
+            if (!routingResults || routingResults.length === 0) {
+                alert('Không có dữ liệu kết quả để tải xuống');
+                return;
+            }
+            
+            let csvContent = 'Thời gian (giờ),Lưu lượng đến (m³/s),Lưu lượng ra (m³/s),Lưu lượng trung bình (m³/s)\n';
+            
+            routingResults.forEach(row => {
+                csvContent += `${row.time.toFixed(1)},${row.inflow.toFixed(2)},${row.outflow.toFixed(2)},${row.avgFlow.toFixed(2)}\n`;
+            });
+            
+            // Tạo Blob và tệp tạm thời
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            // Tạo liên kết tải xuống
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'ket-qua-dien-toan.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Hiển thị thông báo
+            showToast("Đã tạo tệp CSV. Vui lòng lưu tệp khi trình duyệt yêu cầu.", "success");
+        }
+        
+        // Tính toán mô phỏng toàn hệ thống
+        function calculateSystemSimulation() {
+            // Lấy thời gian mô phỏng và bước thời gian
+            const simulationTime = parseInt(document.getElementById('system-time').value);
+            const timeStep = parseInt(document.getElementById('system-step').value);
+            
+            if (isNaN(simulationTime) || simulationTime <= 0 || isNaN(timeStep) || timeStep <= 0) {
+                alert('Vui lòng nhập thời gian mô phỏng và bước thời gian hợp lệ');
+                return;
+            }
+            
+            // Số bước thời gian
+            const numSteps = Math.ceil(simulationTime / timeStep);
+            
+            // Thu thập thông số ban đầu cho mỗi hồ
+            const reservoirParams = {
+                'lai-chau': {
+                    initialLevel: parseFloat(document.getElementById('lc-level').value),
+                    naturalInflow: parseFloat(document.getElementById('lc-inflow').value),
+                    targetType: document.getElementById('lc-target-type').value,
+                    targetValue: parseFloat(document.getElementById('lc-target-value').value)
+                },
+                'ban-chat': {
+                    initialLevel: parseFloat(document.getElementById('bc-level').value),
+                    naturalInflow: parseFloat(document.getElementById('bc-inflow').value),
+                    targetType: document.getElementById('bc-target-type').value,
+                    targetValue: parseFloat(document.getElementById('bc-target-value').value)
+                },
+                'huoi-quang': {
+                    initialLevel: parseFloat(document.getElementById('hq-level').value),
+                    naturalInflow: parseFloat(document.getElementById('hq-inflow').value),
+                    targetType: document.getElementById('hq-target-type').value,
+                    targetValue: parseFloat(document.getElementById('hq-target-value').value)
+                },
+                'son-la': {
+                    initialLevel: parseFloat(document.getElementById('sl-level').value),
+                    naturalInflow: parseFloat(document.getElementById('sl-inflow').value),
+                    targetType: document.getElementById('sl-target-type').value,
+                    targetValue: parseFloat(document.getElementById('sl-target-value').value)
+                },
+                'hoa-binh': {
+                    initialLevel: parseFloat(document.getElementById('hb-level').value),
+                    naturalInflow: parseFloat(document.getElementById('hb-inflow').value),
+                    targetType: document.getElementById('hb-target-type').value,
+                    targetValue: parseFloat(document.getElementById('hb-target-value').value)
+                },
+                'thac-ba': {
+                    initialLevel: parseFloat(document.getElementById('tb-level').value),
+                    naturalInflow: parseFloat(document.getElementById('tb-inflow').value),
+                    targetType: document.getElementById('tb-target-type').value,
+                    targetValue: parseFloat(document.getElementById('tb-target-value').value)
+                },
+                'tuyen-quang': {
+                    initialLevel: parseFloat(document.getElementById('tq-level').value),
+                    naturalInflow: parseFloat(document.getElementById('tq-inflow').value),
+                    targetType: document.getElementById('tq-target-type').value,
+                    targetValue: parseFloat(document.getElementById('tq-target-value').value)
+                }
+            };
+            
+            // Khởi tạo kết quả mô phỏng
+            systemResults = [];
+            
+            // Mảng lưu trạng thái hiện tại của mỗi hồ
+            const currentState = {
+                'lai-chau': {
+                    level: reservoirParams['lai-chau'].initialLevel,
+                    volume: reservoirData['lai-chau'].levelVolumeFunction(reservoirParams['lai-chau'].initialLevel),
+                    outflow: 0
+                },
+                'ban-chat': {
+                    level: reservoirParams['ban-chat'].initialLevel,
+                    volume: reservoirData['ban-chat'].levelVolumeFunction(reservoirParams['ban-chat'].initialLevel),
+                    outflow: 0
+                },
+                'huoi-quang': {
+                    level: reservoirParams['huoi-quang'].initialLevel,
+                    volume: reservoirData['huoi-quang'].levelVolumeFunction(reservoirParams['huoi-quang'].initialLevel),
+                    outflow: 0
+                },
+                'son-la': {
+                    level: reservoirParams['son-la'].initialLevel,
+                    volume: reservoirData['son-la'].levelVolumeFunction(reservoirParams['son-la'].initialLevel),
+                    outflow: 0
+                },
+                'hoa-binh': {
+                    level: reservoirParams['hoa-binh'].initialLevel,
+                    volume: reservoirData['hoa-binh'].levelVolumeFunction(reservoirParams['hoa-binh'].initialLevel),
+                    outflow: 0
+                },
+                'thac-ba': {
+                    level: reservoirParams['thac-ba'].initialLevel,
+                    volume: reservoirData['thac-ba'].levelVolumeFunction(reservoirParams['thac-ba'].initialLevel),
+                    outflow: 0
+                },
+                'tuyen-quang': {
+                    level: reservoirParams['tuyen-quang'].initialLevel,
+                    volume: reservoirData['tuyen-quang'].levelVolumeFunction(reservoirParams['tuyen-quang'].initialLevel),
+                    outflow: 0
+                },
+                'viet-tri': {
+                    inflow: 0,
+                    outflow: 0
+                }
+            };
+            
+            // Lưu trữ lưu lượng trong quá trình diễn toán
+            const routingFlows = {};
+            systemConnections.forEach(conn => {
+                routingFlows[conn.from] = {
+                    current: [],  // Lưu trữ lưu lượng xả ở thời điểm hiện tại
+                    routed: []    // Lưu trữ lưu lượng đã diễn toán
+                };
+            });
+            
+            // Khởi tạo số bước cho routing (lưu trữ lịch sử lưu lượng)
+            const maxDelay = Math.max(...systemConnections.map(conn => Math.ceil(conn.K / timeStep)));
+            
+            // Vòng lặp mô phỏng qua các bước thời gian
+            for (let t = 0; t < numSteps; t++) {
+                const currentTime = t * timeStep;
+                console.log(`Mô phỏng t = ${currentTime} giờ`);
+                
+                // Tính toán theo thứ tự từ thượng nguồn xuống
+                for (const reservoirId of calculationOrder) {
+                    // Nếu là trạm Việt Trì (không phải hồ chứa)
+                    if (reservoirId === 'viet-tri') {
+                        // Tính tổng lưu lượng từ các hồ đến Việt Trì
+                        let totalInflow = 0;
+                        
+                        systemConnections.forEach(conn => {
+                            if (conn.to === 'viet-tri') {
+                                // Lấy lưu lượng đã diễn toán từ hồ đến Việt Trì
+                                if (routingFlows[conn.from].routed.length > 0) {
+                                    totalInflow += routingFlows[conn.from].routed[0];
+                                }
+                            }
+                        });
+                        
+                        currentState['viet-tri'].inflow = totalInflow;
+                        currentState['viet-tri'].outflow = totalInflow; // Giả sử xả tất cả
+                        
+                        // Thêm kết quả vào mảng
+                        systemResults.push({
+                            time: currentTime,
+                            reservoirId: 'viet-tri',
+                            level: null,
+                            inflow: totalInflow,
+                            outflow: totalInflow,
+                            volume: null
+                        });
+                        
+                        continue;
+                    }
+                    
+                    // Thông tin của hồ
+                    const reservoir = reservoirData[reservoirId];
+                    const params = reservoirParams[reservoirId];
+                    
+                    // Tính lưu lượng đến từ tự nhiên
+                    let totalInflow = params.naturalInflow;
+                    
+                    // Thêm lưu lượng từ các hồ thượng nguồn (đã diễn toán)
+                    systemConnections.forEach(conn => {
+                        if (conn.to === reservoirId) {
+                            // Nếu có lưu lượng đã diễn toán, thêm vào
+                            if (routingFlows[conn.from].routed.length > 0) {
+                                totalInflow += routingFlows[conn.from].routed[0];
+                                
+                                // Xóa lưu lượng đã sử dụng
+                                routingFlows[conn.from].routed.shift();
+                            }
+                        }
+                    });
+                    
+                    // Tính thể tích nước vào (m³)
+                    const inflowVolume = totalInflow * timeStep * 3600 / 1000000; // Chuyển đổi sang triệu m³
+                    
+                    // Tính toán lưu lượng xả dựa trên mục tiêu
+                    let outflow = 0;
+                    if (params.targetType === 'level') {
+                        // Mục tiêu là mực nước
+                        const targetLevel = params.targetValue;
+                        const targetVolume = reservoir.levelVolumeFunction(targetLevel);
+                        const volumeChange = targetVolume - currentState[reservoirId].volume;
+                        
+                        // Lưu lượng xả để đạt mục tiêu
+                        outflow = (inflowVolume - volumeChange) * 1000000 / (timeStep * 3600);
+                        
+                        // Giới hạn lưu lượng xả (không âm và không vượt quá giới hạn)
+                        outflow = Math.max(0, outflow);
+                        if (reservoir.maxDischarge !== null) {
+                            outflow = Math.min(outflow, reservoir.maxDischarge);
+                        }
+                        if (reservoir.minDischarge !== null && outflow > 0) {
+                            outflow = Math.max(outflow, reservoir.minDischarge);
+                        }
+                    } else {
+                        // Mục tiêu là lưu lượng xả
+                        outflow = params.targetValue;
+                        
+                        // Kiểm tra giới hạn
+                        if (reservoir.maxDischarge !== null) {
+                            outflow = Math.min(outflow, reservoir.maxDischarge);
+                        }
+                        if (reservoir.minDischarge !== null && outflow > 0) {
+                            outflow = Math.max(outflow, reservoir.minDischarge);
+                        }
+                    }
+                    
+                    // Tính thể tích nước xả (m³)
+                    const outflowVolume = outflow * timeStep * 3600 / 1000000; // Chuyển đổi sang triệu m³
+                    
+                    // Cập nhật thể tích và mực nước
+                    const newVolume = currentState[reservoirId].volume + inflowVolume - outflowVolume;
+                    
+                    // Kiểm tra giới hạn thể tích
+                    let limitedVolume = newVolume;
+                    if (limitedVolume < 0) {
+                        limitedVolume = 0;
+                        // Điều chỉnh lưu lượng xả
+                        outflow = totalInflow - (0 - currentState[reservoirId].volume) * 1000000 / (timeStep * 3600);
+                    } else if (limitedVolume > reservoir.totalCapacity) {
+                        limitedVolume = reservoir.totalCapacity;
+                        // Điều chỉnh lưu lượng xả
+                        outflow = totalInflow + (currentState[reservoirId].volume - reservoir.totalCapacity) * 1000000 / (timeStep * 3600);
+                    }
+                    
+                    // Cập nhật trạng thái
+                    currentState[reservoirId].volume = limitedVolume;
+                    currentState[reservoirId].level = reservoir.volumeLevelFunction(limitedVolume);
+                    currentState[reservoirId].outflow = outflow;
+                    
+                    // Lưu lưu lượng xả vào mảng diễn toán
+                    if (routingFlows[reservoirId]) {
+                        routingFlows[reservoirId].current.push(outflow);
+                    }
+                    
+                    // Thêm kết quả vào mảng
+                    systemResults.push({
+                        time: currentTime,
+                        reservoirId: reservoirId,
+                        level: currentState[reservoirId].level,
+                        inflow: totalInflow,
+                        outflow: outflow,
+                        volume: limitedVolume
+                    });
+                }
+                
+                // Diễn toán lưu lượng cho bước tiếp theo
+                systemConnections.forEach(conn => {
+                    // Nếu có dữ liệu lưu lượng hiện tại
+                    if (routingFlows[conn.from].current.length > 0) {
+                        // Lấy lưu lượng mới nhất
+                        const latestFlow = routingFlows[conn.from].current[routingFlows[conn.from].current.length - 1];
+                        
+                        // Thực hiện diễn toán Muskingum nếu đã có đủ dữ liệu (ít nhất 2 giá trị)
+                        if (routingFlows[conn.from].current.length >= 2) {
+                            const K = conn.K;
+                            const X = conn.X;
+                            
+                            // Tính các hệ số
+                            const c0 = (timeStep - 2 * K * X) / (2 * K * (1 - X) + timeStep);
+                            const c1 = (timeStep + 2 * K * X) / (2 * K * (1 - X) + timeStep);
+                            const c2 = (2 * K * (1 - X) - timeStep) / (2 * K * (1 - X) + timeStep);
+                            
+                            // Lưu lượng đầu vào hiện tại và trước đó
+                            const Q1 = routingFlows[conn.from].current[routingFlows[conn.from].current.length - 1];
+                            const Q0 = routingFlows[conn.from].current[routingFlows[conn.from].current.length - 2];
+                            
+                            // Lưu lượng đầu ra trước đó (nếu có)
+                            let O0 = Q0; // Mặc định bằng lưu lượng đầu vào nếu chưa có giá trị trước đó
+                            if (routingFlows[conn.from].routed.length > 0) {
+                                O0 = routingFlows[conn.from].routed[routingFlows[conn.from].routed.length - 1];
+                            }
+                            
+                            // Tính lưu lượng đầu ra mới
+                            const O1 = c0 * Q1 + c1 * Q0 + c2 * O0;
+                            
+                            // Thêm vào mảng lưu lượng đã diễn toán
+                            routingFlows[conn.from].routed.push(Math.max(0, O1));
+                        } else {
+                            // Nếu chưa đủ dữ liệu, giả sử lưu lượng ra bằng lưu lượng vào
+                            routingFlows[conn.from].routed.push(latestFlow);
+                        }
+                    }
+                });
+            }
+            
+            console.log("Kết quả mô phỏng:", systemResults);
+            
+            // Cập nhật giao diện kết quả
+            updateSystemResultsUI();
+            
+            // Hiển thị thông báo
+            showToast("Mô phỏng hệ thống hoàn tất", "success");
+        }
+        
+        // Cập nhật giao diện kết quả mô phỏng hệ thống
+        function updateSystemResultsUI() {
+            // Hiển thị phần kết quả
+            document.getElementById('no-system-results').classList.add('hidden');
+            document.getElementById('system-results').classList.remove('hidden');
+            
+            // Cập nhật thanh trượt thời gian
+            const timeSlider = document.getElementById('time-slider');
+            const maxTime = Math.max(...systemResults.map(r => r.time));
+            timeSlider.max = maxTime;
+            timeSlider.value = 0;
+            
+            // Cập nhật thời gian hiện tại
+            document.getElementById('current-time').textContent = "0";
+            
+            // Tạo biểu đồ mực nước và lưu lượng xả
+            createSystemCharts();
+            
+            // Cập nhật bảng kết quả
+            updateSystemResultsTable();
+            
+            // Hiển thị trạng thái ban đầu
+            updateSystemVisualization(0);
+        }
+        
+        // Tạo biểu đồ mực nước và lưu lượng xả cho toàn hệ thống
+        function createSystemCharts() {
+            // Chuẩn bị dữ liệu
+            const timePoints = [...new Set(systemResults.map(r => r.time))].sort((a, b) => a - b);
+            const reservoirIds = calculationOrder.filter(id => id !== 'viet-tri');
+            
+            // Dữ liệu mực nước theo thời gian
+            const levelDatasets = reservoirIds.map(id => {
+                const color = reservoirColors[id];
+                const data = timePoints.map(time => {
+                    const result = systemResults.find(r => r.time === time && r.reservoirId === id);
+                    return result ? result.level : null;
+                });
+                
+                return {
+                    label: reservoirData[id].name,
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: color + '33', // Thêm độ trong suốt
+                    tension: 0.4,
+                    borderWidth: 2
+                };
+            });
+            
+            // Dữ liệu lưu lượng xả theo thời gian
+            const outflowDatasets = reservoirIds.map(id => {
+                const color = reservoirColors[id];
+                const data = timePoints.map(time => {
+                    const result = systemResults.find(r => r.time === time && r.reservoirId === id);
+                    return result ? result.outflow : null;
+                });
+                
+                return {
+                    label: reservoirData[id].name,
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: 'transparent',
+                    tension: 0.4,
+                    borderWidth: 2
+                };
+            });
+            
+            // Vẽ biểu đồ mực nước
+            const levelCtx = document.getElementById('levelChart').getContext('2d');
+            if (levelChart) levelChart.destroy();
+            
+            levelChart = new Chart(levelCtx, {
+                type: 'line',
+                data: {
+                    labels: timePoints,
+                    datasets: levelDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' m';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Mực nước (m)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Vẽ biểu đồ lưu lượng xả
+            const outflowCtx = document.getElementById('outflowChart').getContext('2d');
+            if (outflowChart) outflowChart.destroy();
+            
+            outflowChart = new Chart(outflowCtx, {
+                type: 'line',
+                data: {
+                    labels: timePoints,
+                    datasets: outflowDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' m³/s';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Lưu lượng xả (m³/s)'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Cập nhật bảng kết quả mô phỏng hệ thống
+        function updateSystemResultsTable() {
+            const tableBody = document.getElementById('system-results-table');
+            tableBody.innerHTML = '';
+            
+            // Sắp xếp kết quả theo thời gian, sau đó theo thứ tự hồ
+            const sortedResults = [...systemResults].sort((a, b) => {
+                if (a.time !== b.time) return a.time - b.time;
+                
+                // Thứ tự các hồ theo tính toán
+                const aIndex = calculationOrder.indexOf(a.reservoirId);
+                const bIndex = calculationOrder.indexOf(b.reservoirId);
+                return aIndex - bIndex;
+            });
+            
+            sortedResults.forEach(result => {
+                const row = document.createElement('tr');
+                
+                // Tên hồ
+                let reservoirName = result.reservoirId === 'viet-tri' ? 'Việt Trì' : reservoirData[result.reservoirId].name;
+                
+                row.innerHTML = `
+                    <td class="px-3 py-2">${result.time}</td>
+                    <td class="px-3 py-2">${reservoirName}</td>
+                    <td class="px-3 py-2">${result.level !== null ? result.level.toFixed(2) : '-'}</td>
+                    <td class="px-3 py-2">${result.inflow.toFixed(2)}</td>
+                    <td class="px-3 py-2">${result.outflow.toFixed(2)}</td>
+                    <td class="px-3 py-2">${result.volume !== null ? result.volume.toFixed(2) : '-'}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Cập nhật mô phỏng trực quan cho thời điểm cụ thể
+        function updateSystemVisualization(timePoint) {
+            // Cập nhật hiển thị thời gian
+            document.getElementById('current-time').textContent = timePoint;
+            
+            // Cập nhật vị trí thanh trượt
+            document.getElementById('time-slider').value = timePoint;
+            
+            // Tìm kết quả tại thời điểm này
+            const timeResults = systemResults.filter(r => r.time === timePoint);
+            if (timeResults.length === 0) return;
+            
+            // Vẽ lại bản đồ với thông tin mới
+            const systemMap = document.getElementById('system-map');
+            const width = systemMap.clientWidth;
+            const height = systemMap.clientHeight;
+            
+            // Hệ số tỷ lệ
+            const scaleX = width / 500;
+            const scaleY = height / 450;
+            
+            // Xác định màu nền dựa trên chế độ
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const bgColor = isDarkMode ? '#111827' : '#EFF6FF';
+            const textColor = isDarkMode ? '#E5E7EB' : '#1F2937';
+            
+            // Tạo SVG
+            let svg = `
+            <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100%" height="100%" fill="${bgColor}" />
+                
+                <!-- Sông -->
+                ${riverSystemData.rivers.map(river => {
+                    const points = river.points.map(p => `${p[0] * scaleX},${p[1] * scaleY}`).join(' ');
+                    return `<polyline points="${points}" class="${river.class} flow-animation" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+                }).join('')}
+                
+                <!-- Kết nối sông -->
+                ${riverSystemData.connections.map(conn => {
+                    const points = conn.points.map(p => `${p[0] * scaleX},${p[1] * scaleY}`).join(' ');
+                    return `<polyline points="${points}" class="${conn.class} flow-animation" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+                }).join('')}
+            `;
+            
+            // Thêm hồ chứa với màu sắc dựa trên mực nước
+            svg += riverSystemData.reservoirs.map(reservoir => {
+                const result = timeResults.find(r => r.reservoirId === reservoir.id);
+                
+                // Nếu không có kết quả, hiển thị màu mặc định
+                if (!result) {
+                    return `
+                    <g id="reservoir-${reservoir.id}" class="reservoir-marker">
+                        <rect x="${(reservoir.x - 15) * scaleX}" y="${(reservoir.y - 15) * scaleY}" width="${30 * scaleX}" height="${30 * scaleY}" fill="#2563EB" rx="5" ry="5" />
+                        <text x="${reservoir.x * scaleX}" y="${(reservoir.y - 20) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${10 * Math.min(scaleX, scaleY)}px">${reservoir.name}</text>
+                    </g>`;
+                }
+                
+                // Xác định màu sắc dựa trên mực nước
+                const res = reservoirData[reservoir.id];
+                let fillColor;
+                
+                if (result.level > res.normalLevel) {
+                    // Mực nước cao: đỏ
+                    fillColor = '#DC2626';
+                } else if (result.level < res.minLevel) {
+                    // Mực nước thấp: cam
+                    fillColor = '#F97316';
+                } else {
+                    // Mực nước bình thường: xanh
+                    fillColor = '#2563EB';
+                }
+                
+                return `
+                <g id="reservoir-${reservoir.id}" class="reservoir-marker">
+                    <rect x="${(reservoir.x - 15) * scaleX}" y="${(reservoir.y - 15) * scaleY}" width="${30 * scaleX}" height="${30 * scaleY}" fill="${fillColor}" rx="5" ry="5" />
+                    <text x="${reservoir.x * scaleX}" y="${(reservoir.y - 20) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${10 * Math.min(scaleX, scaleY)}px">${reservoir.name}</text>
+                    <text x="${reservoir.x * scaleX}" y="${(reservoir.y + 5) * scaleY}" text-anchor="middle" fill="white" font-size="${9 * Math.min(scaleX, scaleY)}px">${result.level.toFixed(1)}m</text>
+                    <text x="${reservoir.x * scaleX}" y="${(reservoir.y + 35) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${8 * Math.min(scaleX, scaleY)}px">${result.outflow.toFixed(0)} m³/s</text>
+                </g>`;
+            }).join('');
+            
+            // Thêm trạm đo
+            svg += riverSystemData.stations.map(station => {
+                // Nếu là Việt Trì, hiển thị lưu lượng
+                if (station.id === 'viet-tri') {
+                    const result = timeResults.find(r => r.reservoirId === 'viet-tri');
+                    const inflow = result ? result.inflow.toFixed(0) : '?';
+                    
+                    return `
+                    <g id="station-${station.id}" class="station-marker">
+                        <circle cx="${station.x * scaleX}" cy="${station.y * scaleY}" r="${8 * Math.min(scaleX, scaleY)}" fill="#059669" />
+                        <text x="${station.x * scaleX}" y="${(station.y - 15) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${10 * Math.min(scaleX, scaleY)}px">${station.name}</text>
+                        <text x="${station.x * scaleX}" y="${(station.y + 20) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${8 * Math.min(scaleX, scaleY)}px">${inflow} m³/s</text>
+                    </g>`;
+                } else {
+                    return `
+                    <g id="station-${station.id}" class="station-marker">
+                        <circle cx="${station.x * scaleX}" cy="${station.y * scaleY}" r="${8 * Math.min(scaleX, scaleY)}" fill="#059669" />
+                        <text x="${station.x * scaleX}" y="${(station.y + 20) * scaleY}" text-anchor="middle" fill="${textColor}" font-size="${10 * Math.min(scaleX, scaleY)}px">${station.name}</text>
+                    </g>`;
+                }
+            }).join('');
+            
+            svg += '</svg>';
+            
+            systemMap.innerHTML = svg;
+        }
+        
+        // Xuất kết quả mô phỏng ra CSV
+        function exportSystemResultsToCSV() {
+            if (!systemResults || systemResults.length === 0) {
+                alert('Không có dữ liệu kết quả để xuất');
+                return;
+            }
+            
+            let csvContent = 'Thời gian (giờ),Hồ chứa,Mực nước (m),Lưu lượng đến (m³/s),Lưu lượng xả (m³/s),Dung tích (triệu m³)\n';
+            
+            // Sắp xếp kết quả theo thời gian, sau đó theo thứ tự hồ
+            const sortedResults = [...systemResults].sort((a, b) => {
+                if (a.time !== b.time) return a.time - b.time;
+                
+                // Thứ tự các hồ theo tính toán
+                const aIndex = calculationOrder.indexOf(a.reservoirId);
+                const bIndex = calculationOrder.indexOf(b.reservoirId);
+                return aIndex - bIndex;
+            });
+            
+            sortedResults.forEach(result => {
+                const reservoirName = result.reservoirId === 'viet-tri' ? 'Việt Trì' : reservoirData[result.reservoirId].name;
+                const level = result.level !== null ? result.level.toFixed(2) : '';
+                const volume = result.volume !== null ? result.volume.toFixed(2) : '';
+                
+                csvContent += `${result.time},${reservoirName},${level},${result.inflow.toFixed(2)},${result.outflow.toFixed(2)},${volume}\n`;
+            });
+            
+            // Tạo Blob và tệp tạm thời
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            // Tạo liên kết tải xuống
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'mo-phong-he-thong.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Hiển thị thông báo
+            showToast("Đã tạo tệp CSV. Vui lòng lưu tệp khi trình duyệt yêu cầu.", "success");
+        }
+        
+        // Bật/tắt animation
+        function toggleAnimation() {
+            if (animationInterval) {
+                // Dừng animation
+                clearInterval(animationInterval);
+                animationInterval = null;
+                document.getElementById('play-pause').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path></svg>';
+            } else {
+                // Bắt đầu animation
+                const slider = document.getElementById('time-slider');
+                const speed = parseFloat(document.getElementById('animation-speed').value);
+                const maxTime = parseInt(slider.max);
+                
+                // Nếu đã ở cuối, quay lại từ đầu
+                if (parseInt(slider.value) >= maxTime) {
+                    slider.value = 0;
+                }
+                
+                document.getElementById('play-pause').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m-7-9h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z"></path></svg>';
+                
+                animationInterval = setInterval(() => {
+                    const currentValue = parseInt(slider.value);
+                    if (currentValue < maxTime) {
+                        slider.value = currentValue + 1;
+                        updateSystemVisualization(parseInt(slider.value));
+                    } else {
+                        // Đã đến cuối, dừng animation
+                        clearInterval(animationInterval);
+                        animationInterval = null;
+                        document.getElementById('play-pause').innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path></svg>';
+                    }
+                }, 1000 / speed);
+            }
+        }
+
+        // Xử lý thay đổi kích thước cửa sổ
+        window.addEventListener('resize', function() {
+            console.log("Cửa sổ thay đổi kích thước, vẽ lại giao diện");
+            drawRiverSystem();
+            
+            // Vẽ lại bản đồ hệ thống nếu đang hiển thị
+            if (!document.getElementById('system-results').classList.contains('hidden')) {
+                const timeSlider = document.getElementById('time-slider');
+                updateSystemVisualization(parseInt(timeSlider.value));
+            }
+            
+            // Cập nhật biểu đồ nếu tồn tại
+            if (lineChart) {
+                lineChart.resize();
+            }
+            if (routingChart) {
+                routingChart.resize();
+            }
+            if (levelChart) {
+                levelChart.resize();
+            }
+            if (outflowChart) {
+                outflowChart.resize();
+            }
+        });
+    </script>
+</body>
+</html>
